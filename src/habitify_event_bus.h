@@ -73,7 +73,8 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
   // channel
   friend class ::habitify::EventBus;
 
-  PublisherBase();
+  PublisherBase::PublisherBase()
+      : cv_(std::make_shared<std::condition_variable_any>()) {}
   virtual ~PublisherBase() = default;
 
   // PublisherBase is not copyable due to the use of std::shared_mutex
@@ -108,7 +109,15 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
 
   /// RegisterPublisher(const ChannelIdType& channel) is called by EventBus and
   /// sets all the necessary members.
-  bool RegisterPublisher(const std::shared_ptr<Channel> channel);
+  bool PublisherBase::RegisterPublisher(
+      const std::shared_ptr<Channel> channel) {
+    std::unique_lock<std::shared_mutex> lock(mux_);
+
+    channel_ = channel;
+    channel_id_ = channel->get_channel_id();
+
+    return is_registered_ = true;
+  }
 
  protected:
   mutable std::shared_mutex mux_;
@@ -127,8 +136,9 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
 class Channel {
  public:
   Channel() = delete;
-  Channel(const ChannelIdType& channel_id,
-          std::shared_ptr<PublisherBase> publisher = nullptr);
+  Channel::Channel(const ChannelIdType& channel,
+                   std::shared_ptr<PublisherBase> publisher)
+      : channel_id_(channel), publisher_(publisher) {}
   ~Channel() = default;
 
   // Channel is not copyable due to the use of std::shared_mutex
@@ -144,12 +154,36 @@ class Channel {
     return listeners_;
   }
   /// Adds a new Listener to the Channel.
-  void RegisterListener(std::shared_ptr<Listener> listener);
+  void Channel::RegisterListener(std::shared_ptr<Listener> listener) {
+    std::unique_lock<std::shared_mutex> lock(mux_);
+    if (std::find(listeners_.begin(), listeners_.end(), listener) !=
+        listeners_.end())
+      return;
+    listeners_.push_back(listener);
+  }
 
   /// Registers the Publisher. TODO: We need to return a nullptr or break if the
   /// EvTyps of publisher do not match. When they do we can merge them.
-  std::shared_ptr<PublisherBase> RegisterPublisher(
-      std::shared_ptr<PublisherBase> publisher);
+  std::shared_ptr<PublisherBase> Channel::RegisterPublisher(
+      std::shared_ptr<PublisherBase> publisher) {
+    std::unique_lock<std::shared_mutex> lock(mux_);
+    // If the channel already has a publisher we merge them by assigning the
+    // given shared_ptr to the publisher_ in place.
+    if (publisher_) {
+      publisher = publisher_;
+      return publisher;
+    }
+
+    publisher_ = publisher;
+
+    // Since a new Publisher was assigned to the channel we need to update all
+    // Listeners that are already subscribed to this channel.
+    for (auto& listener : listeners_) {
+      listener->RefreshPublisher();
+    }
+
+    return publisher_;
+  }
 
  private:
   std::shared_mutex mux_;
@@ -308,11 +342,18 @@ class Listener : public std::enable_shared_from_this<Listener> {
 
   /// Listener::SubscribeTo() is used
   /// by the EventBus to assign the Listener to a specific channel
-  void SubscribeTo(std::shared_ptr<internal::Channel> channel);
+  void Listener::SubscribeTo(std::shared_ptr<internal::Channel> channel) {
+    std::unique_lock<std::shared_mutex> lock(mux_);
+    channel_ = channel;
+    channel_id_ = channel->get_channel_id();
+    publisher_ = channel->get_publisher();
+    is_subscribed_ = true;
+  }
 
  private:
   Listener() = delete;
-  Listener(std::shared_ptr<EventBus> event_bus);
+  Listener::Listener(std::shared_ptr<EventBus> event_bus)
+      : event_bus_(event_bus) {}
 
  private:
   mutable std::shared_mutex mux_;
@@ -354,7 +395,21 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
 
   /// Returns a shared_ptr to the Listener object that is subscribed to the
   /// specified channel. This is the only way to obtain a Listener object.
-  std::shared_ptr<Listener> SubscribeTo(const ChannelIdType& channel);
+  std::shared_ptr<Listener> EventBus::SubscribeTo(
+      const ChannelIdType& channel_id) {
+    auto channel = GetChannel(channel_id);
+
+    std::unique_lock<std::shared_mutex> lock(mux_);
+
+    if (channel) {
+      auto listener = Listener::Create(shared_from_this());
+      listener->SubscribeTo(channel);
+      channel->RegisterListener(listener);
+      return listener;
+    }
+
+    return nullptr;
+  }
 
   /// Returns a shared_ptr to the Publisher object that publishes to the
   /// specified channel
@@ -383,8 +438,19 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
  protected:
   /// Returns the Channel with the specified ID. If no Channel with that ID
   /// exists it instantiates a new one.
-  std::shared_ptr<internal::Channel> GetChannel(
-      const ChannelIdType& channel_id);
+  std::shared_ptr<internal::Channel> EventBus::GetChannel(
+      const ChannelIdType& channel) {
+    std::unique_lock<std::shared_mutex> lock(mux_);
+
+    auto it = channels_.find(channel);
+    if (it != channels_.end()) return it->second;
+
+    // If the channel does not exist yet we create it.
+    auto channel_ptr = std::make_shared<internal::Channel>(channel);
+    channels_.emplace(std::make_pair(channel, channel_ptr));
+
+    return channel_ptr;
+  }
 
  private:
   // This is a singleton class so the constructor needs to be private.
