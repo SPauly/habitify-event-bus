@@ -33,7 +33,7 @@
 ///           object e.g. Event<int>
 ///           NOTE: Listener and Publisher need to be created as shared_ptr to
 ///           ensure thread safety. The best practice is to use the
-///           EventBus::SubscribeTo and EventBus::RegisterPublisher functions
+///           EventBus::CreateSubscriber and EventBus::CreatePublisher functions
 
 #ifndef HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_BUS_H_
 #define HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_BUS_H_
@@ -107,10 +107,9 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
     return nullptr;
   }
 
-  /// RegisterPublisher(const ChannelIdType& channel) is called by EventBus and
+  /// CreatePublisher(const ChannelIdType& channel) is called by EventBus and
   /// sets all the necessary members.
-  bool PublisherBase::RegisterPublisher(
-      const std::shared_ptr<Channel> channel) {
+  bool PublisherBase::CreatePublisher(const std::shared_ptr<Channel> channel) {
     std::unique_lock<std::shared_mutex> lock(mux_);
 
     channel_ = channel;
@@ -164,7 +163,7 @@ class Channel {
 
   /// Registers the Publisher. TODO: We need to return a nullptr or break if the
   /// EvTyps of publisher do not match. When they do we can merge them.
-  std::shared_ptr<PublisherBase> Channel::RegisterPublisher(
+  std::shared_ptr<PublisherBase> Channel::CreatePublisher(
       std::shared_ptr<PublisherBase> publisher) {
     std::unique_lock<std::shared_mutex> lock(mux_);
     // If the channel already has a publisher we merge them by assigning the
@@ -201,7 +200,7 @@ class Channel {
 /// Usage:
 ///       std::unique_ptr<Event<int>> event;
 ///       std::shared_ptr<Publisher<int>> p = Publisher<int>::Create();
-///       p->RegisterPublisher(0);
+///       p->CreatePublisher(0);
 ///       p.Publish(std::move(event));
 template <typename EvTyp>
 class Publisher : public internal::PublisherBase {
@@ -257,7 +256,7 @@ class Publisher : public internal::PublisherBase {
  private:
   Publisher() : PublisherBase() {}
   /// Publisher()::Create() was made private to ensure that it is only created
-  /// via the EventBus::RegisterPublisher() function. This way we can enforce
+  /// via the EventBus::CreatePublisher() function. This way we can enforce
   /// that Publisher is purely used as shared_ptr instance.
   static std::shared_ptr<Publisher<EvTyp>> Create() {
     return std::shared_ptr<Publisher<EvTyp>>(new Publisher<EvTyp>());
@@ -272,12 +271,12 @@ class Publisher : public internal::PublisherBase {
 /// Listener is used to read events from the Publisher. It is designed to be
 /// thread safe. Usage:
 ///       std::shared_ptr<Listener> l = Listener::Create();
-///       l->SubscribeTo(0);
+///       l->CreateSubscriber(0);
 ///       if(l.HasReceivedEvent()) auto event = l.ReadLatest<int>();
 class Listener : public std::enable_shared_from_this<Listener> {
  public:
-  // EventBus needs access to the SubscribeTo() function to properly instantiate
-  // the Listener object
+  // EventBus needs access to the CreateSubscriber() function to properly
+  // instantiate the Listener object
   friend class EventBus;
 
   virtual ~Listener() = default;
@@ -335,14 +334,14 @@ class Listener : public std::enable_shared_from_this<Listener> {
   /// Listener() was made private to ensure that it is only created via the
   /// Create function. This way we can enforce that Listener is purely used as
   /// shared_ptr instance.
-  /// NOTE: Listener is instantiated via EventBus::SubscribeTo()
+  /// NOTE: Listener is instantiated via EventBus::CreateSubscriber()
   static std::shared_ptr<Listener> Create(std::shared_ptr<EventBus> event_bus) {
     return std::shared_ptr<Listener>(new Listener(event_bus));
   }
 
-  /// Listener::SubscribeTo() is used
+  /// Listener::CreateSubscriber() is used
   /// by the EventBus to assign the Listener to a specific channel
-  void Listener::SubscribeTo(std::shared_ptr<internal::Channel> channel) {
+  void Listener::CreateSubscriber(std::shared_ptr<internal::Channel> channel) {
     std::unique_lock<std::shared_mutex> lock(mux_);
     channel_ = channel;
     channel_id_ = channel->get_channel_id();
@@ -395,7 +394,7 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
 
   /// Returns a shared_ptr to the Listener object that is subscribed to the
   /// specified channel. This is the only way to obtain a Listener object.
-  std::shared_ptr<Listener> EventBus::SubscribeTo(
+  std::shared_ptr<Listener> EventBus::CreateSubscriber(
       const ChannelIdType& channel_id) {
     auto channel = GetChannel(channel_id);
 
@@ -403,7 +402,7 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
 
     if (channel) {
       auto listener = Listener::Create(shared_from_this());
-      listener->SubscribeTo(channel);
+      listener->CreateSubscriber(channel);
       channel->RegisterListener(listener);
       return listener;
     }
@@ -414,7 +413,7 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
   /// Returns a shared_ptr to the Publisher object that publishes to the
   /// specified channel
   template <typename EvTyp>
-  std::shared_ptr<Publisher<EvTyp>> RegisterPublisher(
+  std::shared_ptr<Publisher<EvTyp>> CreatePublisher(
       const ChannelIdType& channel) {
     auto channel_ptr = GetChannel(channel);
 
@@ -426,8 +425,8 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
           channel_ptr->get_publisher());
 
     auto publisher = Publisher<EvTyp>::Create();
-    publisher->RegisterPublisher(channel_ptr);
-    channel_ptr->RegisterPublisher(publisher);
+    publisher->CreatePublisher(channel_ptr);
+    channel_ptr->CreatePublisher(publisher);
 
     return publisher;
   }

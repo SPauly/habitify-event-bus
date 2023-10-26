@@ -32,11 +32,11 @@ class EventBusTest : public ::testing::Test {
  protected:
   void SetUp() override {
     event_bus_ = ::habitify::EventBus::Create();
-    listener_int_ = event_bus_->SubscribeTo(0);
-    listener_str_ = event_bus_->SubscribeTo(1);
+    listener_int_ = event_bus_->CreateSubscriber(0);
+    listener_str_ = event_bus_->CreateSubscriber(1);
 
-    publisher_int_ = event_bus_->RegisterPublisher<int>(0);
-    publisher_str_ = event_bus_->RegisterPublisher<std::string>(1);
+    publisher_int_ = event_bus_->CreatePublisher<int>(0);
+    publisher_str_ = event_bus_->CreatePublisher<std::string>(1);
   }
 
  protected:
