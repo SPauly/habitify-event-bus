@@ -24,7 +24,7 @@
 #include <string>
 #include <thread>
 
-#include "src/habitify_event_bus.h"
+#include "include/habitify_event_bus.h"
 
 int main() {
   int amount_of_events = 0;

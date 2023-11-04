@@ -49,7 +49,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "src/habitify_event.h"
+#include "include/habitify_event.h"
 
 namespace habitify {
 
