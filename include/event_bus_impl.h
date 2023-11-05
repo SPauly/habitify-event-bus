@@ -15,3 +15,19 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
+#ifndef HABITIFY_EVENT_BUS_INCLUDE_EVENT_BUS_IMPL_H_
+#define HABITIFY_EVENT_BUS_INCLUDE_EVENT_BUS_IMPL_H_
+
+#include "include/port.h"
+
+namespace habitify {
+namespace internal {
+class EventBusImpl {
+ public:
+  EventBusImpl();
+  ~EventBusImpl();
+};
+}  // namespace internal
+}  // namespace habitify
+
+#endif  // HABITIFY_EVENT_BUS_INCLUDE_EVENT_BUS_IMPL_H_
