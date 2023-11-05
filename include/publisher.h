@@ -90,11 +90,7 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
 /// Listener.
 /// It is designed to be thread safe so that multiple Listeners can access the
 /// data concurrently.
-/// Usage:
-///       std::unique_ptr<Event<int>> event;
-///       std::shared_ptr<Publisher<int>> p = Publisher<int>::Create();
-///       p->CreatePublisher(0);
-///       p.Publish(std::move(event));
+/// TODO: Add Usage:
 template <typename EvTyp>
 class Publisher : public internal::PublisherBase {
  public:
