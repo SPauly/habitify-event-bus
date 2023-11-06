@@ -23,11 +23,10 @@
 #include <memory>
 #include <shared_mutex>
 
+#include "include/actor_ids.h"
 #include "include/habitify_event.h"
 
 namespace habitify {
-using PortId = int;
-
 enum class PortStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
 namespace internal {
 

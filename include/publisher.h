@@ -28,8 +28,8 @@
 
 namespace habitify {
 
-// forward declaration implemented in include/event_bus.h
-class EventBus;
+// forward declaration implemented in include/event_bus_impl.h
+class EventBusImpl;
 
 namespace internal {
 /// PublisherBase is used as a way of storing Publisher in the EventBus. The
