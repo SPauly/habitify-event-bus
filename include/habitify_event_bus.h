@@ -24,6 +24,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 
+#include "include/actor_ids.h"
 #include "include/event_bus_impl.h"
 #include "include/habitify_event.h"
 #include "include/listener.h"

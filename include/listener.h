@@ -22,12 +22,14 @@
 #include <memory>
 #include <shared_mutex>
 
+#include "include/actor_ids.h"
 #include "include/habitify_event.h"
+#include "include/port.h"
 
 namespace habitify {
 
 // forward declarations
-class EventBus;
+class EventBusImpl;
 
 /// Listener is used to read events from the Publisher. It is designed to be
 /// thread safe. Usage:
@@ -37,7 +39,7 @@ class Listener : public std::enable_shared_from_this<Listener> {
  public:
   // EventBus needs access to the CreateSubscriber() function to properly
   // instantiate the Listener object
-  friend class EventBus;
+  friend class EventBusImpl;
 
   virtual ~Listener() = default;
 
@@ -48,85 +50,46 @@ class Listener : public std::enable_shared_from_this<Listener> {
   /// Attempts to subscribe to the specified channel. If no Publisher is set it
   /// creates a new Channel. The Channel then calls RefreshPublisher() once the
   /// Publisher was added.
-  /// TODO: void ChangeSubscription(const ChannelIdType& channel);
-
-  /// Returns true if the Listener is subscribed to a Publisher. And false if no
-  /// publisher is set.
-  inline bool ValidatePublisher() { return (bool)publisher_; }
-
-  /// RefreshPublisher() is called by the Channel if a Publisher is added to it.
-  inline void RefreshPublisher() {
-    std::unique_lock<std::shared_mutex> lock(mux_);
-    publisher_ = channel_->get_publisher();
-  }
+  /// TODO: void ChangeSubscription(const PortId& id);
 
   /// Returns the latest event published by the Publisher. If there are no
   /// events it returns nullptr.
   template <typename EvTyp>
-  const std::shared_ptr<const Event<EvTyp>> ReadLatest() {
-    std::shared_lock<std::shared_mutex> lock(mux_);
+  const std::shared_ptr<const Event<EvTyp>> ReadLatest() {}
 
-    if (!ValidatePublisher()) return nullptr;
-
-    auto event = publisher_->ReadLatestImpl();
-    if (event == nullptr) return nullptr;
-
-    auto latest_converted = std::static_pointer_cast<const Event<EvTyp>>(event);
-    if (!latest_converted)
-      assert(false && "ReadLatest tried retrieving data of wrong format");
-
-    read_index_++;
-    return latest_converted;
-  }
-
-  inline bool HasReceivedEvent() {
-    return ValidatePublisher() ? publisher_->HasReceivedEvent(read_index_)
-                               : false;
-  }
+  inline bool HasReceivedEvent();
 
   // Getters
   inline const bool get_is_subscribed() { return is_subscribed_; }
-  inline const ChannelIdType get_channel_id() { return channel_id_; }
   inline const size_t get_read_index() { return read_index_; }
-  inline const std::shared_ptr<EventBus> get_event_bus() { return event_bus_; }
 
  protected:
   /// Listener() was made private to ensure that it is only created via the
   /// Create function. This way we can enforce that Listener is purely used as
   /// shared_ptr instance.
   /// NOTE: Listener is instantiated via EventBus::CreateSubscriber()
-  static std::shared_ptr<Listener> Create(std::shared_ptr<EventBus> event_bus) {
+  static std::shared_ptr<Listener> Create(
+      std::shared_ptr<EventBusImpl> event_bus) {
     return std::shared_ptr<Listener>(new Listener(event_bus));
-  }
-
-  /// Listener::CreateSubscriber() is used
-  /// by the EventBus to assign the Listener to a specific channel
-  void Listener::CreateSubscriber(std::shared_ptr<internal::Channel> channel) {
-    std::unique_lock<std::shared_mutex> lock(mux_);
-    channel_ = channel;
-    channel_id_ = channel->get_channel_id();
-    publisher_ = channel->get_publisher();
-    is_subscribed_ = true;
   }
 
  private:
   Listener() = delete;
-  Listener::Listener(std::shared_ptr<EventBus> event_bus)
-      : event_bus_(event_bus) {}
+  Listener::Listener(std::shared_ptr<EventBusImpl> event_bus)
+      : event_bus_(event_bus), kId_(internal::GetListenerId()) {}
 
  private:
   mutable std::shared_mutex mux_;
+
+  const ListenerId kId_;
   bool is_subscribed_ = false;
   size_t read_index_ = 0;
 
-  /// channel_id_ refers to a predefined ChannelId and is used to identify the
-  /// Publisher.
-  ChannelIdType channel_id_ = 0;
-  std::shared_ptr<internal::Channel> channel_;
+  PortId port_id_ = 0;
+  // This might be a nullptr if the port is blocked or not yet subscribed to
+  std::shared_ptr<internal::Port> port_;
 
-  /// This might be nullptr if the Listener is not subscribed to a Publisher.
-  std::shared_ptr<internal::PublisherBase> publisher_;
-  std::shared_ptr<EventBus> event_bus_;
+  std::shared_ptr<EventBusImpl> event_bus_;
 };
 }  // namespace habitify
 
