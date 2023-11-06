@@ -26,11 +26,11 @@
 #include "include/habitify_event.h"
 
 namespace habitify {
-namespace internal {
-
 using PortId = int;
 
 enum class PortStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
+namespace internal {
+
 class Port {
  public:
   Port();
