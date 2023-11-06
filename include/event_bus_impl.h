@@ -26,6 +26,10 @@ class EventBusImpl {
  public:
   EventBusImpl();
   ~EventBusImpl();
+
+ private:
+  // Ports are stored together with their ID for fast lookups.
+  std::unordered_map<internal::PortId, std::shared_ptr<internal::Port>> ports_;
 };
 }  // namespace internal
 }  // namespace habitify

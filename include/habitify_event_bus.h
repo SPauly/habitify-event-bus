@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <shared_mutex>
+#include <unordered_map>
 
 #include "include/event_bus_impl.h"
 #include "include/habitify_event.h"
@@ -43,68 +44,16 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
   /// NOTE that EventBus cannot be constructed via a constructor.
   /// It can be more efficient to store the returned shared_ptr for future use
   /// than to call this function.
-  static std::shared_ptr<EventBus> Create() {
-    return std::shared_ptr<EventBus>(new EventBus());
-  }
+  static std::shared_ptr<EventBus> Create();
 
   /// Returns a shared_ptr to the Listener object that is subscribed to the
-  /// specified channel. This is the only way to obtain a Listener object.
-  std::shared_ptr<Listener> EventBus::CreateListener(
-      const ChannelIdType& channel_id) {
-    auto channel = GetChannel(channel_id);
-
-    std::unique_lock<std::shared_mutex> lock(mux_);
-
-    if (channel) {
-      auto listener = Listener::Create(shared_from_this());
-      listener->CreateSubscriber(channel);
-      channel->RegisterListener(listener);
-      return listener;
-    }
-
-    return nullptr;
-  }
+  /// specified port. This is the only way to obtain a Listener object.
+  std::shared_ptr<Listener> EventBus::CreateListener();
 
   /// Returns a shared_ptr to the Publisher object that publishes to the
-  /// specified channel
+  /// specified port. This is the only way to obtain a Publisher object.
   template <typename EvTyp>
-  std::shared_ptr<Publisher<EvTyp>> CreatePublisher(
-      const ChannelIdType& channel) {
-    auto channel_ptr = GetChannel(channel);
-
-    std::unique_lock<std::shared_mutex> lock(mux_);
-    // If the channel already has a publisher we avoid creating a new one. And
-    // instead share the access to it.
-    if (channel_ptr->get_publisher() != nullptr)
-      return std::static_pointer_cast<Publisher<EvTyp>>(
-          channel_ptr->get_publisher());
-
-    auto publisher = Publisher<EvTyp>::Create();
-    publisher->CreatePublisher(channel_ptr);
-    channel_ptr->CreatePublisher(publisher);
-
-    return publisher;
-  }
-
-  // Getters
-  inline const int GetChannelCount() { return channels_.size(); }
-
- protected:
-  /// Returns the Channel with the specified ID. If no Channel with that ID
-  /// exists it instantiates a new one.
-  std::shared_ptr<internal::Channel> EventBus::GetChannel(
-      const ChannelIdType& channel) {
-    std::unique_lock<std::shared_mutex> lock(mux_);
-
-    auto it = channels_.find(channel);
-    if (it != channels_.end()) return it->second;
-
-    // If the channel does not exist yet we create it.
-    auto channel_ptr = std::make_shared<internal::Channel>(channel);
-    channels_.emplace(std::make_pair(channel, channel_ptr));
-
-    return channel_ptr;
-  }
+  std::shared_ptr<Publisher<EvTyp>> CreatePublisher();
 
  private:
   // This is a singleton class so the constructor needs to be private.
@@ -113,9 +62,9 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
  private:
   mutable std::shared_mutex mux_;
 
-  // Channels are stored together with their ID for fast lookups.
-  std::unordered_map<ChannelIdType, std::shared_ptr<internal::Channel>>
-      channels_;
+  // The EventBusImpl is the actual implementation of the EventBus. It is used
+  // internally for managing the ports, publishers and listeners.
+  std::shared_ptr<internal::EventBusImpl> impl_;
 };
 
 }  // namespace habitify
