@@ -18,7 +18,14 @@
 #ifndef HABITIFY_EVENT_BUS_INCLUDE_EVENT_BUS_IMPL_H_
 #define HABITIFY_EVENT_BUS_INCLUDE_EVENT_BUS_IMPL_H_
 
+#include <memory>
+#include <shared_mutex>
+#include <unordered_map>
+#include <vector>
+
+#include "include/listener.h"
 #include "include/port.h"
+#include "include/publisher.h"
 
 namespace habitify {
 namespace internal {
@@ -27,9 +34,33 @@ class EventBusImpl {
   EventBusImpl();
   ~EventBusImpl();
 
+  // EventBusImpl is noncopyable
+  EventBusImpl(const EventBusImpl&) = delete;
+  EventBusImpl& operator=(const EventBusImpl&) = delete;
+
+  /// Attempts to create a listener object that is subscribed to the specified
+  /// port. Returns nullptr if the port is blocked. The Listener object
+  /// additionally is stored in the eventbus for proper life time management
+  /// with multiple threads.
+  std::shared_ptr<Listener> CreateListener(const PortId& id);
+
+  /// Attempts to create a publisher object that is subscribed to the specified
+  /// port. Returns nullptr if the port is blocked or already has a publisher.
+  /// The Publisher object additionally is stored in the eventbus for proper
+  /// life time management with multiple threads.
+  template <typename EvTyp>
+  std::shared_ptr<Publisher<EvTyp>> CreatePublisher(const PortId& id);
+
  private:
   // Ports are stored together with their ID for fast lookups.
-  std::unordered_map<internal::PortId, std::shared_ptr<internal::Port>> ports_;
+  std::unordered_map<PortId, std::shared_ptr<internal::Port>> ports_;
+
+  // Publishers are stored together with their ID for fast lookups.
+  std::unordered_map<PublisherId, std::shared_ptr<internal::PublisherBase>>
+      publishers_;
+
+  // Listeners are stored together with their ID for fast lookups.
+  std::unordered_map<ListenerId, std::shared_ptr<Listener>> listeners_;
 };
 }  // namespace internal
 }  // namespace habitify

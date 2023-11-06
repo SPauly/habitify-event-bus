@@ -46,14 +46,16 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
   /// than to call this function.
   static std::shared_ptr<EventBus> Create();
 
-  /// Returns a shared_ptr to the Listener object that is subscribed to the
-  /// specified port. This is the only way to obtain a Listener object.
-  std::shared_ptr<Listener> EventBus::CreateListener();
+  /// Attempts to create a listener object that is subscribed to the specified
+  /// port. Returns nullptr if the port is blocked. This is the only way to
+  /// obtain a Listener object.
+  std::shared_ptr<Listener> EventBus::CreateListener(const PortId& id);
 
-  /// Returns a shared_ptr to the Publisher object that publishes to the
-  /// specified port. This is the only way to obtain a Publisher object.
+  /// Attempts to create a publisher object that is subscribed to the specified
+  /// port. Returns nullptr if the port is blocked or already has a publisher.
+  /// This is the only way to obtain a Publisher object.
   template <typename EvTyp>
-  std::shared_ptr<Publisher<EvTyp>> CreatePublisher();
+  std::shared_ptr<Publisher<EvTyp>> CreatePublisher(const PortId& id);
 
  private:
   // This is a singleton class so the constructor needs to be private.
