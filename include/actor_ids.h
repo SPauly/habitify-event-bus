@@ -22,12 +22,14 @@ namespace habitify {
 using PortId = int;
 using PublisherId = int;
 using ListenerId = int;
+using EventId = int;
 
 namespace internal {
 // implementation detail in src/create_ids.cc
 const PortId GetPortId();
 const PublisherId GetPublisherId();
 const ListenerId GetListenerId();
+const EventId GetEventId();  // This needs to be implemented by the Event class
 }  // namespace internal
 
 }  // namespace habitify

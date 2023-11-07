@@ -37,8 +37,10 @@ namespace internal {
 /// inherated from. Use Publisher as the interface to EventBus!
 class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
  public:
-  PublisherBase::PublisherBase()
-      : cv_(std::make_shared<std::condition_variable_any>()) {}
+  PublisherBase::PublisherBase(const PortId port_id, std::shared_ptr<Port> port)
+      : cv_(std::make_shared<std::condition_variable_any>()),
+        kPortId_(port_id),
+        kPublisherId_(internal::GetPublisherId()) {}
   virtual ~PublisherBase() = default;
 
   // PublisherBase is not copyable due to the use of std::shared_mutex
@@ -46,30 +48,7 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
   const PublisherBase& operator=(const PublisherBase&) = delete;
 
   // Getters and Setters:
-  inline const ChannelIdType& get_channel_id() { return channel_id_; }
   inline const bool get_is_registered() { return is_registered_; }
-  /// Returns a conditonal_variable_any that is notified by Publish().
-  inline std::shared_ptr<std::condition_variable_any> get_cv() { return cv_; }
-  /// Returns the latest Event as it's base class. This is mostly used for
-  /// testing. Prefer accessing the Data via a Listener object.
-  const std::shared_ptr<const internal::EventBase> GetLatestEvent() {
-    return ReadLatestImpl();
-  }
-
-  /// PublisherBase::HasReceivedEvent(size_t index) checks if there are unread
-  /// events for the caller based on the specified index. TODO: take into
-  /// account that events can be removed from the que.
-  virtual bool HasReceivedEvent(size_t index) {
-    assert(false && "HasReceivedEvent() not implemented");
-    return true;
-  }
-
- protected:
-  /// This function is called by Listener::ReadLatest and is implemented by
-  /// the derived class.
-  virtual const std::shared_ptr<const internal::EventBase> ReadLatestImpl() {
-    return nullptr;
-  }
 
  protected:
   mutable std::shared_mutex
@@ -80,9 +59,9 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
 
  private:
   bool is_registered_ = false;
-  /// channel_id_ refers to a predefined ChannelId and is used for
-  /// identification by the Listener.
-  ChannelIdType channel_id_ = 0;
+
+  const PortId kPortId_;
+  const PublisherId kPublisherId_;
 };
 }  // namespace internal
 
@@ -102,59 +81,24 @@ class Publisher : public internal::PublisherBase {
   Publisher(const Publisher&) = delete;
   const Publisher& operator=(const Publisher&) = delete;
 
-  /// Publisher::HasReceivedEvent(size_t index) checks if there are unread
-  /// events for the Listener
-  virtual bool HasReceivedEvent(size_t index) override {
-    std::shared_lock<std::shared_mutex> lock(mux_);
-    return index < writer_index_;
-  }
-
   /// Publisher<EvTyp>::Publish(std::unique_ptr< const internal::EventBase>)
   /// takes ownership of the event and provides thread safe access to the
   /// Listener.
   template <typename T>
-  bool Publish(std::unique_ptr<const Event<T>> event) {
-    if (!get_is_registered()) return false;
-    std::unique_lock<std::shared_mutex> lock(mux_);
-
-    auto shared_event =
-        std::shared_ptr<const internal::EventBase>(std::move(event));
-    event_storage_.emplace(writer_index_, shared_event);
-
-    cv_->notify_all();
-    ++writer_index_;
-    return true;
-  }
-
-  inline const size_t get_writer_index() { return writer_index_; }
-
- protected:
-  /// See PublisherBase::ReadLatestImpl()
-  virtual const std::shared_ptr<const internal::EventBase> ReadLatestImpl()
-      override {
-    std::shared_lock<std::shared_mutex> lock(mux_);
-
-    if (event_storage_.empty()) return nullptr;
-
-    auto event = event_storage_.find(writer_index_ - 1);
-    if (event == event_storage_.end()) return nullptr;
-
-    return event->second;
-  }
+  bool Publish(std::unique_ptr<const Event<T>> event) {}
 
  private:
-  Publisher() : PublisherBase() {}
+  Publisher() = delete;
+  Publisher(const PortId port_id, std::shared_ptr<Port> port)
+      : PublisherBase(port_id, port) {}
   /// Publisher()::Create() was made private to ensure that it is only created
   /// via the EventBus::CreatePublisher() function. This way we can enforce
   /// that Publisher is purely used as shared_ptr instance.
-  static std::shared_ptr<Publisher<EvTyp>> Create() {
-    return std::shared_ptr<Publisher<EvTyp>>(new Publisher<EvTyp>());
+  static std::shared_ptr<Publisher<EvTyp>> Create(const PortId port_id,
+                                                  std::shared_ptr<Port> port) {
+    return std::shared_ptr<Publisher<EvTyp>>(
+        new Publisher<EvTyp>(port_id, port));
   }
-
- private:
-  std::unordered_map<int, std::shared_ptr<const internal::EventBase>>
-      event_storage_;
-  size_t writer_index_ = 0;
 };
 
 }  // namespace habitify
