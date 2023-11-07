@@ -77,6 +77,9 @@ class Port {
   size_t data_size_ = 0;
   unsigned int listener_count_ = 0;
 
+  // Events are stored as their baseclass to ensure type flexibility.
+  // They are stored together with their respectiv ids to enable a fast lookup
+  // by listeners.
   std::unordered_map<EventId, EventBase> events_;
 };
 
