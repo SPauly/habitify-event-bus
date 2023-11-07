@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <memory>
 #include <shared_mutex>
+#include <unordered_map>
 
 #include "include/actor_ids.h"
 #include "include/habitify_event.h"
@@ -49,6 +50,9 @@ class Port {
   /// stores the event internally as shared_ptr but needs to obtain ownership
   /// first
   bool Push(std::unique_ptr<const EventBase> event);
+  /// Enables streaming events to the Port. Calls internal::Port::Push(event)
+  /// internally.
+  bool operator<<(std::unique_ptr<const EventBase> event);
 
   // Access the latest Event
   /// PullLatest() returns a copy of the latest Event without removing it from
@@ -58,6 +62,10 @@ class Port {
   /// PopLatest() returns the latest Event and removes it from the port.
   /// It is advised to store the returned Event for later use.
   std::shared_ptr<const EventBase> PopLatest();
+  /// Calls PopLatest() internally to return the latest event from the port and
+  /// remove it from the port.
+  std::shared_ptr<const EventBase> operator>>(
+      std::shared_ptr<const EventBase> event_storage);
 
  private:
   mutable std::shared_mutex mux_;
@@ -68,6 +76,8 @@ class Port {
 
   size_t data_size_ = 0;
   unsigned int listener_count_ = 0;
+
+  std::unordered_map<EventId, EventBase> events_;
 };
 
 }  // namespace internal
