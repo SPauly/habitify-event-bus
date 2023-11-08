@@ -53,14 +53,14 @@ class EventBusImpl {
 
  private:
   // Ports are stored together with their ID for fast lookups.
-  std::unordered_map<PortId, std::shared_ptr<internal::Port>> ports_;
+  std::unordered_map<const PortId, std::shared_ptr<Port>> ports_;
 
   // Publishers are stored together with their ID for fast lookups.
-  std::unordered_map<PublisherId, std::shared_ptr<internal::PublisherBase>>
+  std::unordered_map<const PublisherId, std::shared_ptr<PublisherBase>>
       publishers_;
 
   // Listeners are stored together with their ID for fast lookups.
-  std::unordered_map<ListenerId, std::shared_ptr<Listener>> listeners_;
+  std::unordered_map<const ListenerId, std::shared_ptr<Listener>> listeners_;
 };
 }  // namespace internal
 }  // namespace habitify
