@@ -47,9 +47,6 @@ class Listener : public std::enable_shared_from_this<Listener> {
   Listener(const Listener&) = delete;
   const Listener& operator=(const Listener&) = delete;
 
-  /// Attempts to subscribe to the specified channel. If no Publisher is set it
-  /// creates a new Channel. The Channel then calls RefreshPublisher() once the
-  /// Publisher was added.
   /// TODO: void ChangeSubscription(const PortId& id);
 
   /// Returns the latest event published by the Publisher. If there are no
@@ -60,6 +57,8 @@ class Listener : public std::enable_shared_from_this<Listener> {
   inline bool HasReceivedEvent();
 
   // Getters
+  inline const ListenerId get_id() { return kId_; }
+  inline const PortId get_port_id() { return port_id_; }
   inline const bool get_is_subscribed() { return is_subscribed_; }
   inline const size_t get_read_index() { return read_index_; }
 
