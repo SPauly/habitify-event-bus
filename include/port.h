@@ -33,7 +33,8 @@ namespace internal {
 
 class Port {
  public:
-  Port();
+  Port() = delete;
+  Port(const PortId id);
   virtual ~Port();
 
   // Getters
