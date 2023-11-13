@@ -35,5 +35,30 @@ EventBusImpl::~EventBusImpl() {
   listeners_.clear();
 }
 
+std::shared_ptr<Listener> EventBusImpl::CreateListener(const PortId id) {
+  std::shared_ptr<Port> port;
+  // check if a port with the respective id already exists
+  auto it_port = ports_.find(id);
+  // create the port in case it does not exist
+  if (it_port == ports_.end()) {
+    port = std::make_shared<Port>(id);
+    ports_.emplace(id, port);
+  }
+
+  port = ports_.at(id);
+
+  // if the port is blocked we do not create a listener object
+  if (port->get_status() == PortStatus::kBlocked) return nullptr;
+
+  // create the listener object
+  std::shared_ptr<Listener> listener =
+      std::make_shared<Listener>(shared_from_this(), port);
+
+  // store the listener object in the map
+  listeners_.emplace(listener->get_id(), listener);
+
+  return listener;
+}
+
 }  // namespace internal
 }  // namespace habitify
