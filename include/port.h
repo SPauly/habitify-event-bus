@@ -36,6 +36,13 @@ class Port {
   Port();
   virtual ~Port();
 
+  // Getters
+  /// Returns the PortId of the Port
+  inline const PortId get_id() const { return id_; }
+
+  /// Returns the PortStatus
+  inline const PortStatus get_status() const { return status_; }
+
   // Port management
   /// Opens the Port for writing and reading
   const PortStatus Open();
@@ -44,9 +51,7 @@ class Port {
   /// Blocks the Port for writing
   const PortStatus Block();
 
-  /// Returns the PortId of the Port
-  inline const PortId GetId() const { return id_; }
-
+  // Operants on the Port
   /// stores the event internally as shared_ptr but needs to obtain ownership
   /// first
   bool Push(std::unique_ptr<const EventBase> event);
