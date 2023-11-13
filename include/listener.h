@@ -63,20 +63,11 @@ class Listener : public std::enable_shared_from_this<Listener> {
   inline const bool get_is_subscribed() { return is_subscribed_; }
   inline const size_t get_read_index() { return read_index_; }
 
- protected:
-  /// Listener() was made private to ensure that it is only created via the
-  /// Create function. This way we can enforce that Listener is purely used as
-  /// shared_ptr instance.
-  /// NOTE: Listener is instantiated via EventBus::CreateSubscriber()
-  static std::shared_ptr<Listener> Create(
-      std::shared_ptr<EventBusImpl> event_bus) {
-    return std::shared_ptr<Listener>(new Listener(event_bus));
-  }
-
  private:
   Listener() = delete;
-  Listener::Listener(std::shared_ptr<EventBusImpl> event_bus)
-      : event_bus_(event_bus), kId_(internal::GetListenerId()) {}
+  Listener::Listener(std::shared_ptr<EventBusImpl> event_bus,
+                     std::shared_ptr<internal::Port> port)
+      : event_bus_(event_bus), port_(port), kId_(internal::GetListenerId());
 
  private:
   mutable std::shared_mutex mux_;
