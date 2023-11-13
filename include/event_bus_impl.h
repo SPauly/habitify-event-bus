@@ -29,7 +29,7 @@
 
 namespace habitify {
 namespace internal {
-class EventBusImpl {
+class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
  public:
   EventBusImpl();
   ~EventBusImpl();
@@ -42,14 +42,14 @@ class EventBusImpl {
   /// port. Returns nullptr if the port is blocked. The Listener object
   /// additionally is stored in the eventbus for proper life time management
   /// with multiple threads.
-  std::shared_ptr<Listener> CreateListener(const PortId& id);
+  std::shared_ptr<Listener> CreateListener(const PortId id);
 
   /// Attempts to create a publisher object that is subscribed to the specified
   /// port. Returns nullptr if the port is blocked or already has a publisher.
   /// The Publisher object additionally is stored in the eventbus for proper
   /// life time management with multiple threads.
   template <typename EvTyp>
-  std::shared_ptr<Publisher<EvTyp>> CreatePublisher(const PortId& id);
+  std::shared_ptr<Publisher<EvTyp>> CreatePublisher(const PortId id);
 
  private:
   // Ports are stored together with their ID for fast lookups.
