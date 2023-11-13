@@ -66,8 +66,7 @@ class Listener : public std::enable_shared_from_this<Listener> {
  private:
   Listener() = delete;
   Listener::Listener(std::shared_ptr<EventBusImpl> event_bus,
-                     std::shared_ptr<internal::Port> port)
-      : event_bus_(event_bus), port_(port), kId_(internal::GetListenerId());
+                     std::shared_ptr<internal::Port> port);
 
  private:
   mutable std::shared_mutex mux_;
