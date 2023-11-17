@@ -48,7 +48,8 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
   const PublisherBase& operator=(const PublisherBase&) = delete;
 
   // Getters and Setters:
-  inline const bool get_is_registered() { return is_registered_; }
+  inline const bool get_is_registered() const { return is_registered_; }
+  inline const PublisherId get_id() const { return kPublisherId_; }
 
  protected:
   mutable std::shared_mutex

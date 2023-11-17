@@ -40,9 +40,18 @@ class Port {
   // Getters
   /// Returns the PortId of the Port
   inline const PortId get_id() const { return id_; }
-
   /// Returns the PortStatus
   inline const PortStatus get_status() const { return status_; }
+  /// Returns the size of the data stored in the Port
+  inline const size_t get_data_size() const { return data_size_; }
+  /// Returns true if the Port has a publisher
+  inline const bool get_has_publisher() const { return has_publisher_; }
+
+  // Setters
+  /// Sets has_publisher_ to true
+  inline void set_has_publisher() { has_publisher_ = true; }
+  /// Sets publisher_id_ to the specified id
+  inline void set_publisher_id(const PublisherId id) { publisher_id_ = id; }
 
   // Port management
   /// Opens the Port for writing and reading
@@ -51,6 +60,9 @@ class Port {
   const PortStatus Close();
   /// Blocks the Port for writing
   const PortStatus Block();
+  /// Unblocks the Port for writing. The PublisherId is used to ensure that only
+  /// the Publisher that blocked the Port can unblock it.
+  const PortStatus Unblock(const PublisherId id);
 
   // Operants on the Port
   /// stores the event internally as shared_ptr but needs to obtain ownership
@@ -81,6 +93,8 @@ class Port {
   PortStatus status_ = PortStatus::kClosed;
 
   size_t data_size_ = 0;
+  bool has_publisher_ = false;
+  PublisherId publisher_id_ = 0;
   unsigned int listener_count_ = 0;
 
   // Events are stored as their baseclass to ensure type flexibility.

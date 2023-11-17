@@ -62,6 +62,37 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   // Listeners are stored together with their ID for fast lookups.
   std::unordered_map<const ListenerId, std::shared_ptr<Listener>> listeners_;
 };
+
+// Template definition of CreatePublisher
+template <typename EvTyp>
+std::shared_ptr<Publisher<EvTyp>> EventBusImpl::CreatePublisher(
+    const PortId id) {
+  std::shared_ptr<Port> port;
+
+  // Check if port already exists
+  if (ports_.find(id) != ports_.end()) {
+    // return nullptr if the port already has a publisher publishing to it
+    if (ports_.at(id)->get_has_publisher()) return nullptr;
+
+    // set the port properly otherwise
+    port = ports_.at(id);
+  } else {
+    port = std::make_shared<internal::Port>(id);
+  }
+
+  // Create publisher
+  auto publisher = std::make_shared<Publisher<EvTyp>>(id, port);
+
+  // Add publisher to port
+  port->set_publisher_id(publisher->get_id());
+  port->set_has_publisher();
+
+  // Add publisher to publishers
+  publishers_.emplace(publisher->get_id(), publisher);
+
+  return publisher;
+}
+
 }  // namespace internal
 }  // namespace habitify
 
