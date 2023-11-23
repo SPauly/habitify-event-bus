@@ -97,6 +97,7 @@ class Publisher : public internal::PublisherBase {
   /// that Publisher is purely used as shared_ptr instance.
   static std::shared_ptr<Publisher<EvTyp>> Create(const PortId port_id,
                                                   std::shared_ptr<Port> port) {
+    /// TODO: Remove use of new keyword here
     return std::shared_ptr<Publisher<EvTyp>>(
         new Publisher<EvTyp>(port_id, port));
   }

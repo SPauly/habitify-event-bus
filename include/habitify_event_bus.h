@@ -46,6 +46,7 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
   /// It can be more efficient to store the returned shared_ptr for future use
   /// than to call this function.
   static std::shared_ptr<EventBus> Create() {
+    /// TODO: Remove use of new keyword here
     return std::shared_ptr<EventBus>(new EventBus);
   }
 
