@@ -18,13 +18,14 @@
 #ifndef HABITIFY_EVENT_BUS_ACTOR_IDS_H_
 #define HABITIFY_EVENT_BUS_ACTOR_IDS_H_
 
+#include <cstddef>
 /// TODO: Remove this file and move types to a different location
 
 namespace habitify {
-using PortId = int;
-using PublisherId = int;
-using ListenerId = int;
-using EventId = int;
+using PortId = size_t;
+using PublisherId = size_t;
+using ListenerId = size_t;
+using EventId = size_t;
 }  // namespace habitify
 
 #endif  // HABITIFY_EVENT_BUS_ACTOR_IDS_H_
