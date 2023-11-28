@@ -28,20 +28,13 @@
 #include <habitify_event_bus/impl/port.h>
 
 namespace habitify {
-
-// forward declaration implemented in include/event_bus_impl.h
-class EventBusImpl;
-
 namespace internal {
 /// PublisherBase is used as a way of storing Publisher in the EventBus. The
 /// actual functionality is implemented by the derived class. It needs to be
 /// inherated from. Use Publisher as the interface to EventBus!
 class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
  public:
-  PublisherBase::PublisherBase(const PortId port_id, std::shared_ptr<Port> port)
-      : cv_(std::make_shared<std::condition_variable_any>()),
-        kPortId_(port_id),
-        kPublisherId_(internal::GetPublisherId()) {}
+  PublisherBase::PublisherBase() = default;
   virtual ~PublisherBase() = default;
 
   // PublisherBase is not copyable due to the use of std::shared_mutex
@@ -49,21 +42,9 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
   const PublisherBase& operator=(const PublisherBase&) = delete;
 
   // Getters and Setters:
-  inline const bool get_is_registered() const { return is_registered_; }
-  inline const PublisherId get_id() const { return kPublisherId_; }
-
- protected:
-  // shared_ptr is used over standard mutex to allow multiple threads
-  // to read simultaneously. And only one thread to write.
-  mutable std::shared_mutex mux_;
-
-  std::shared_ptr<std::condition_variable_any> cv_;
-
- private:
-  bool is_registered_ = false;
-
-  const PortId kPortId_;
-  const PublisherId kPublisherId_;
+  virtual const bool get_is_registered() const { return false; }
+  virtual const PublisherId get_id() const { return 0; }
+  virtual const PortId get_port_id() const { return 0; }
 };
 }  // namespace internal
 }  // namespace habitify

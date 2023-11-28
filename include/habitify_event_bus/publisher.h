@@ -1,5 +1,5 @@
 // habitify-event-bus - Event bus system from
-// <https://github.com/SPauly/Habitify> Copyright (C) 2023  Simon Pauly
+// Copyright (C) 2023  Simon Pauly
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,11 +40,16 @@ class EventBusImpl;
 template <typename EvTyp>
 class Publisher : public internal::PublisherBase {
  public:
-  ~Publisher() = default;
+  virtual ~Publisher() = default;
 
   // Publisher is not copyable due to the use of std::shared_mutex
   Publisher(const Publisher&) = delete;
   const Publisher& operator=(const Publisher&) = delete;
+
+  // Getters and Setters:
+  virtual const bool get_is_registered() const override;
+  virtual const PublisherId get_id() const override;
+  virtual const PortId get_port_id() const override;
 
   /// Publisher<EvTyp>::Publish(std::unique_ptr< const internal::EventBase>)
   /// takes ownership of the event and provides thread safe access to the
@@ -67,6 +72,16 @@ class Publisher : public internal::PublisherBase {
     return std::shared_ptr<Publisher<EvTyp>>(
         new Publisher<EvTyp>(port_id, port));
   }
+
+ protected:
+  // shared_ptr is used over standard mutex to allow multiple threads
+  // to read simultaneously. And only one thread to write.
+  mutable std::shared_mutex mux_;
+  std::shared_ptr<std::condition_variable_any> cv_;
+
+ private:
+  bool is_registered_ = false;
+  const PublisherId kPublisherId_;
 };
 
 }  // namespace habitify
