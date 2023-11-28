@@ -25,7 +25,6 @@
 #include <vector>
 
 #include <habitify_event_bus/actor_ids.h>
-#include <habitify_event_bus/impl/port.h>
 
 namespace habitify {
 namespace internal {

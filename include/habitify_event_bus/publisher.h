@@ -61,16 +61,14 @@ class Publisher : public internal::PublisherBase {
   friend class EventBusImpl;
 
   Publisher() = delete;
-  Publisher(const PortId port_id, std::shared_ptr<Port> port);
+  Publisher(const PublisherId id, std::shared_ptr<Port> port);
 
   /// Publisher()::Create() was made private to ensure that it is only created
   /// via the EventBus::CreatePublisher() function. This way we can enforce
   /// that Publisher is purely used as shared_ptr instance.
-  static std::shared_ptr<Publisher<EvTyp>> Create(const PortId port_id,
-                                                  std::shared_ptr<Port> port) {
-    /// TODO: Remove use of new keyword here
-    return std::shared_ptr<Publisher<EvTyp>>(
-        new Publisher<EvTyp>(port_id, port));
+  std::shared_ptr<Publisher<EvTyp>> Create(const PublisherId id,
+                                           std::shared_ptr<Port> port) {
+    return std::make_shared<Publisher<EvTyp>>(id, port_);
   }
 
  protected:
@@ -82,6 +80,9 @@ class Publisher : public internal::PublisherBase {
  private:
   bool is_registered_ = false;
   const PublisherId kPublisherId_;
+
+  // This is where Publisher publishes the data to.
+  std::shared_ptr<internal::Port> port_;
 };
 
 }  // namespace habitify
