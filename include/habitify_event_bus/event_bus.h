@@ -1,5 +1,5 @@
 // habitify-event-bus - Event bus system from
-// <https://github.com/SPauly/Habitify> Copyright (C) 2023  Simon Pauly
+// Copyright (C) 2023  Simon Pauly
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,19 +17,19 @@
 // Contact via <https://github.com/SPauly/habitify-event-bus>
 
 // This file exposes the interface to the EventBus
-#ifndef HABITIFY_EVENT_BUS_INCLUDE_HABITIFY_EVENT_BUS_H_
-#define HABITIFY_EVENT_BUS_INCLUDE_HABITIFY_EVENT_BUS_H_
+#ifndef HABITIFY_EVENT_BUS_HABITIFY_EVENT_BUS_H_
+#define HABITIFY_EVENT_BUS_HABITIFY_EVENT_BUS_H_
 
 #include <memory>
 #include <shared_mutex>
 #include <unordered_map>
 
-#include "include/actor_ids.h"
-#include "include/event_bus_impl.h"
-#include "include/habitify_event.h"
-#include "include/listener.h"
-#include "include/port.h"
-#include "include/publisher.h"
+#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/impl/event_base.h>
+#include <habitify_event_bus/impl/event_bus_impl.h>
+#include <habitify_event_bus/listener.h>
+#include <habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/publisher.h>
 
 namespace habitify {
 class EventBus : public std::enable_shared_from_this<EventBus> {
@@ -79,4 +79,4 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
 
 }  // namespace habitify
 
-#endif  // HABITIFY_EVENT_BUS_INCLUDE_HABITIFY_EVENT_BUS_H_
+#endif  // HABITIFY_EVENT_BUS_HABITIFY_EVENT_BUS_H_

@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#include "include/event_bus_impl.h"
+#include <habitify_event_bus/impl/event_bus_impl.h>
 
 namespace habitify {
 namespace internal {
@@ -36,7 +36,7 @@ EventBusImpl::~EventBusImpl() {
 }
 
 std::shared_ptr<Listener> EventBusImpl::CreateListener(const PortId id) {
-    std::shared_ptr<Port> port;
+  std::shared_ptr<Port> port;
 
   // create the port in case it does not exist
   if (ports_.find(id) == ports_.end()) {

@@ -22,25 +22,18 @@
 #include <memory>
 #include <shared_mutex>
 
-#include "include/actor_ids.h"
-#include "include/habitify_event.h"
-#include "include/port.h"
+#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/event.h>
+#include <habitify_event_bus/impl/port.h>
 
 namespace habitify {
-
-// forward declarations
 class EventBusImpl;
 
 /// Listener is used to read events from the Publisher. It is designed to be
 /// thread safe. Usage:
 /// TODO: Add usage example
-
 class Listener : public std::enable_shared_from_this<Listener> {
  public:
-  // EventBus needs access to the CreateSubscriber() function to properly
-  // instantiate the Listener object
-  friend class EventBusImpl;
-
   virtual ~Listener() = default;
 
   // Listener is not copyable due to the use of std::shared_mutex
@@ -63,6 +56,8 @@ class Listener : public std::enable_shared_from_this<Listener> {
   inline const size_t get_read_index() { return read_index_; }
 
  private:
+  friend class EventBusImpl;
+
   Listener() = delete;
   Listener::Listener(std::shared_ptr<EventBusImpl> event_bus,
                      std::shared_ptr<internal::Port> port);

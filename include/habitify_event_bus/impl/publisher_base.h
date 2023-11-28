@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#ifndef HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
-#define HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
+#ifndef HABITIFY_EVENT_BUS_IMPL_PUBLISHER_BASE_H_
+#define HABITIFY_EVENT_BUS_IMPL_PUBLISHER_BASE_H_
 
 #include <cassert>
 #include <condition_variable>
@@ -24,7 +24,8 @@
 #include <shared_mutex>
 #include <vector>
 
-#include "include/habitify_event.h"
+#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/impl/port.h>
 
 namespace habitify {
 
@@ -52,9 +53,9 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
   inline const PublisherId get_id() const { return kPublisherId_; }
 
  protected:
-  mutable std::shared_mutex
-      mux_;  // shared_ptr is used over standard mutex to allow multiple threads
-             // to read simultaneously. And only one thread to write.
+  // shared_ptr is used over standard mutex to allow multiple threads
+  // to read simultaneously. And only one thread to write.
+  mutable std::shared_mutex mux_;
 
   std::shared_ptr<std::condition_variable_any> cv_;
 
@@ -65,44 +66,6 @@ class PublisherBase : public std::enable_shared_from_this<PublisherBase> {
   const PublisherId kPublisherId_;
 };
 }  // namespace internal
-
-/// Publisher manages objects of type Event<EvTyp> and publishes the data to the
-/// Listener.
-/// It is designed to be thread safe so that multiple Listeners can access the
-/// data concurrently.
-/// TODO: Add Usage:
-template <typename EvTyp>
-class Publisher : public internal::PublisherBase {
- public:
-  friend class EventBus;
-
-  ~Publisher() = default;
-
-  // Publisher is not copyable due to the use of std::shared_mutex
-  Publisher(const Publisher&) = delete;
-  const Publisher& operator=(const Publisher&) = delete;
-
-  /// Publisher<EvTyp>::Publish(std::unique_ptr< const internal::EventBase>)
-  /// takes ownership of the event and provides thread safe access to the
-  /// Listener.
-  template <typename T>
-  bool Publish(std::unique_ptr<const Event<T>> event) {}
-
- private:
-  Publisher() = delete;
-  Publisher(const PortId port_id, std::shared_ptr<Port> port)
-      : PublisherBase(port_id, port) {}
-  /// Publisher()::Create() was made private to ensure that it is only created
-  /// via the EventBus::CreatePublisher() function. This way we can enforce
-  /// that Publisher is purely used as shared_ptr instance.
-  static std::shared_ptr<Publisher<EvTyp>> Create(const PortId port_id,
-                                                  std::shared_ptr<Port> port) {
-    /// TODO: Remove use of new keyword here
-    return std::shared_ptr<Publisher<EvTyp>>(
-        new Publisher<EvTyp>(port_id, port));
-  }
-};
-
 }  // namespace habitify
 
-#endif  // HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
+#endif  // HABITIFY_EVENT_BUS_IMPL_PUBLISHER_BASE_H_

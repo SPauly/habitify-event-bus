@@ -1,5 +1,5 @@
 // habitify-event-bus - Event bus system from
-// <https://github.com/SPauly/Habitify> Copyright (C) 2023  Simon Pauly
+// Copyright (C) 2023  Simon Pauly
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,17 +15,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#ifndef HABITIFY_EVENT_BUS_INCLUDE_EVENT_BUS_IMPL_H_
-#define HABITIFY_EVENT_BUS_INCLUDE_EVENT_BUS_IMPL_H_
+#ifndef HABITIFY_EVENT_BUS_IMPL_EVENT_BUS_IMPL_H_
+#define HABITIFY_EVENT_BUS_IMPL_EVENT_BUS_IMPL_H_
 
 #include <memory>
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
-#include "include/listener.h"
-#include "include/port.h"
-#include "include/publisher.h"
+#include <habitify_event_bus/listener.h>
+#include <habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/publisher.h>
 
 namespace habitify {
 namespace internal {
@@ -96,4 +96,4 @@ std::shared_ptr<Publisher<EvTyp>> EventBusImpl::CreatePublisher(
 }  // namespace internal
 }  // namespace habitify
 
-#endif  // HABITIFY_EVENT_BUS_INCLUDE_EVENT_BUS_IMPL_H_
+#endif  // HABITIFY_EVENT_BUS_IMPL_EVENT_BUS_IMPL_H_

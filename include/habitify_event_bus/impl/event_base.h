@@ -1,5 +1,5 @@
 // habitify-event-bus - Event bus system from
-// <https://github.com/SPauly/Habitify> Copyright (C) 2023  Simon Pauly
+// Copyright (C) 2023  Simon Pauly
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,11 +16,12 @@
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
 
-#ifndef HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
-#define HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
+#ifndef HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_
+#define HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_
 
 namespace habitify {
 
+/// TODO: Remove unnecessary types and make use of smart pointers
 enum EventType { TEST, TEST2 };
 
 using ChannelIdType = int;
@@ -62,22 +63,6 @@ class EventBase {
   ChannelIdType channel_id_ = 0;
 };
 }  // namespace internal
-
-template <typename T>
-class Event : public internal::EventBase {
- public:
-  Event(EventType etype, ChannelIdType channel_id, T *data)
-      : internal::EventBase(etype, channel_id), data_(data) {}
-  ~Event() {}
-
- protected:
-  virtual void *GetMutableDataImpl() override { return data_; }
-  virtual const void *const GetDataImpl() const override { return data_; }
-
- private:
-  T *data_;
-};
-
 }  // namespace habitify
 
-#endif  // HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
+#endif  // HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_

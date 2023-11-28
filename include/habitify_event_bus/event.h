@@ -1,5 +1,5 @@
 // habitify-event-bus - Event bus system from
-// <https://github.com/SPauly/Habitify> Copyright (C) 2023  Simon Pauly
+// Copyright (C) 2023  Simon Pauly
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,23 +15,31 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#ifndef HABITIFY_EVENT_BUS_INCLUDE_ACTOR_IDS_H_
-#define HABITIFY_EVENT_BUS_INCLUDE_ACTOR_IDS_H_
+
+#ifndef HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
+#define HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
+
+#include <habitify_event_bus/impl/event_base.h>
 
 namespace habitify {
-using PortId = int;
-using PublisherId = int;
-using ListenerId = int;
-using EventId = int;
 
-namespace internal {
-// implementation detail in src/create_ids.cc
-const PortId GetPortId();
-const PublisherId GetPublisherId();
-const ListenerId GetListenerId();
-const EventId GetEventId();  // This needs to be implemented by the Event class
-}  // namespace internal
+/// TODO: Add documentation + Move getters and setters from base class here for
+/// a better interface
+template <typename T>
+class Event : public internal::EventBase {
+ public:
+  Event(EventType etype, ChannelIdType channel_id, T *data)
+      : internal::EventBase(etype, channel_id), data_(data) {}
+  ~Event() {}
+
+ protected:
+  virtual void *GetMutableDataImpl() override { return data_; }
+  virtual const void *const GetDataImpl() const override { return data_; }
+
+ private:
+  T *data_;
+};
 
 }  // namespace habitify
 
-#endif  // HABITIFY_EVENT_BUS_INCLUDE_ACTOR_IDS_H_
+#endif  // HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_

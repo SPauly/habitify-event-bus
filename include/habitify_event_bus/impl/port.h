@@ -1,5 +1,5 @@
 // habitify-event-bus - Event bus system from
-// <https://github.com/SPauly/Habitify> Copyright (C) 2023  Simon Pauly
+// Copyright (C) 2023  Simon Pauly
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#ifndef HABITIFY_EVENT_BUS_INCLUDE_PORT_H_
-#define HABITIFY_EVENT_BUS_INCLUDE_PORT_H_
+#ifndef HABITIFY_EVENT_BUS_IMPL_PORT_H_
+#define HABITIFY_EVENT_BUS_IMPL_PORT_H_
 
 #include <condition_variable>
 #include <cstddef>
@@ -24,19 +24,22 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include "include/actor_ids.h"
-#include "include/habitify_event.h"
+#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/impl/event_base.h>
+#include <habitify_event_bus/port_state.h>
 
 namespace habitify {
+/// TODO: Move PortStatus into Port class and call it Status for convinience
 enum class PortStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
-namespace internal {
 
+namespace internal {
 class Port {
  public:
   Port() = delete;
   Port(const PortId id);
   virtual ~Port();
 
+  /// TODO: Move most of this functionality into port_state.h
   // Getters
   /// Returns the PortId of the Port
   inline const PortId get_id() const { return id_; }
@@ -73,9 +76,12 @@ class Port {
   bool operator<<(std::unique_ptr<const EventBase> event);
 
   // Access the latest Event
-  /// PullLatest() returns a copy of the latest Event without removing it from
-  /// the port. The copy ensures that thread safety is maintained in case other
-  /// threads pop the latest Event.
+  /// TODO: Add functionality to access the latest event without removing or
+  /// copying it
+
+  /// PullLatest() returns a copy of the latest Event without
+  /// removing it from the port. The copy ensures that thread safety is
+  /// maintained in case other threads pop the latest Event.
   const EventBase PullLatest() const;
   /// PopLatest() returns the latest Event and removes it from the port.
   /// It is advised to store the returned Event for later use.
@@ -104,7 +110,6 @@ class Port {
 };
 
 }  // namespace internal
-
 }  // namespace habitify
 
-#endif  // HABITIFY_EVENT_BUS_INCLUDE_PORT_H_
+#endif  // HABITIFY_EVENT_BUS_IMPL_PORT_H_
