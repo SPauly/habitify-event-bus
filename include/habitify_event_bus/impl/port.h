@@ -24,9 +24,9 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <spauly/habitify_event_bus/actor_ids.h>
-#include <spauly/habitify_event_bus/impl/event_base.h>
-#include <spauly/habitify_event_bus/port_state.h>
+#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/impl/event_base.h>
+#include <habitify_event_bus/port_state.h>
 
 namespace habitify_event_bus {
 /// TODO: Move PortStatus into Port class and call it Status for convinience

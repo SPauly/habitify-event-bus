@@ -24,7 +24,7 @@
 #include <shared_mutex>
 #include <vector>
 
-#include <spauly/habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/actor_ids.h>
 
 namespace habitify_event_bus {
 namespace internal {

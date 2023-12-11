@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#include <spauly/habitify_event_bus/impl/event_bus_impl.h>
+#include <habitify_event_bus/impl/event_bus_impl.h>
 
 namespace habitify_event_bus {
 namespace internal {

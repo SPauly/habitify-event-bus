@@ -22,9 +22,9 @@
 #include <memory>
 #include <shared_mutex>
 
-#include <spauly/habitify_event_bus/actor_ids.h>
-#include <spauly/habitify_event_bus/event.h>
-#include <spauly/habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/event.h>
+#include <habitify_event_bus/impl/port.h>
 
 namespace habitify_event_bus {
 class EventBusImpl;

@@ -21,8 +21,8 @@
 #include <string>
 #include <thread>
 
-#include <spauly/habitify_event_bus/event.h>
-#include <spauly/habitify_event_bus/event_bus.h>
+#include <habitify_event_bus/event.h>
+#include <habitify_event_bus/event_bus.h>
 
 namespace habitify_event_bus {
 namespace habitify_testing {

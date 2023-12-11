@@ -24,9 +24,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include <spauly/habitify_event_bus/listener.h>
-#include <spauly/habitify_event_bus/impl/port.h>
-#include <spauly/habitify_event_bus/publisher.h>
+#include <habitify_event_bus/listener.h>
+#include <habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/publisher.h>
 
 namespace habitify_event_bus {
 using ListenerPtr = std::shared_ptr<Listener>;

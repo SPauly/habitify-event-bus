@@ -24,12 +24,12 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <spauly/habitify_event_bus/actor_ids.h>
-#include <spauly/habitify_event_bus/impl/event_base.h>
-#include <spauly/habitify_event_bus/impl/event_bus_impl.h>
-#include <spauly/habitify_event_bus/listener.h>
-#include <spauly/habitify_event_bus/impl/port.h>
-#include <spauly/habitify_event_bus/publisher.h>
+#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/impl/event_base.h>
+#include <habitify_event_bus/impl/event_bus_impl.h>
+#include <habitify_event_bus/listener.h>
+#include <habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/publisher.h>
 
 namespace habitify_event_bus {
 using ListenerPtr = std::shared_ptr<Listener>;
