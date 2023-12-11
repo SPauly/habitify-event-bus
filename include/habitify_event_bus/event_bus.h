@@ -32,8 +32,14 @@
 #include <habitify_event_bus/publisher.h>
 
 namespace habitify {
+using ListenerPtr = std::shared_ptr<Listener>;
+template <typename EvTyp>
+using PublisherPtr = std::shared_ptr<Publisher<EvTyp>>;
+
 class EventBus : public std::enable_shared_from_this<EventBus> {
  public:
+  using EventBusImplPtr = std::shared_ptr<EventBusImpl>;
+
   // EventBus() is private since this should only be created via Create().
   ~EventBus() = default;
 
@@ -53,7 +59,7 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
   /// Attempts to create a listener object that is subscribed to the specified
   /// port. Returns nullptr if the port is blocked. This is the only way to
   /// obtain a Listener object.
-  std::shared_ptr<Listener> EventBus::CreateListener(const PortId& id) {
+  ListenerPtr EventBus::CreateListener(const PortId& id) {
     return impl_->CreateListener(id);
   }
 
@@ -61,7 +67,7 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
   /// port. Returns nullptr if the port is blocked or already has a publisher.
   /// This is the only way to obtain a Publisher object.
   template <typename EvTyp>
-  std::shared_ptr<Publisher<EvTyp>> CreatePublisher(const PortId& id) {
+  PublisherPtr<EvTyp> CreatePublisher(const PortId& id) {
     return impl_->CreatePublisher<EvTyp>(id);
   }
 
@@ -70,11 +76,9 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
   EventBus() : impl_(std::make_shared<internal::EventBusImpl>()) {}
 
  private:
-  mutable std::shared_mutex mux_;
-
   // The EventBusImpl is the actual implementation of the EventBus. It is used
   // internally for managing the ports, publishers and listeners.
-  std::shared_ptr<internal::EventBusImpl> impl_;
+  EventBusImplPtr impl_;
 };
 
 }  // namespace habitify
