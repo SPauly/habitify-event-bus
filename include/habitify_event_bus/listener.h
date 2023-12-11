@@ -59,7 +59,8 @@ class Listener : public std::enable_shared_from_this<Listener> {
   friend class EventBusImpl;
 
   Listener() = delete;
-  Listener::Listener(std::shared_ptr<EventBusImpl> event_bus,
+  Listener::Listener(const ListenerId id,
+                     std::shared_ptr<EventBusImpl> event_bus,
                      std::shared_ptr<internal::Port> port);
 
  private:

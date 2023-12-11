@@ -24,8 +24,10 @@ EventBusImpl::EventBusImpl() {
   // do some basic setup
 }
 EventBusImpl::~EventBusImpl() {
+  std::unique_lock<std::shared_mutex> lock(mux_publisher_);
+
   // close all open ports and remove them from the map
-  for (std::pair<const PortId, std::shared_ptr<Port>>& p : ports_) {
+  for (std::pair<const PortId, PortPtr>& p : ports_) {
     p.second->Close();
   }
   ports_.clear();
@@ -36,6 +38,9 @@ EventBusImpl::~EventBusImpl() {
 }
 
 std::shared_ptr<Listener> EventBusImpl::CreateListener(const PortId id) {
+  std::unique_lock<std::shared_mutex> lock(mux_listener_);
+
+  // This is used to retreive/or create the respective port object
   std::shared_ptr<Port> port;
 
   // create the port in case it does not exist
@@ -46,17 +51,28 @@ std::shared_ptr<Listener> EventBusImpl::CreateListener(const PortId id) {
     port = ports_.at(id);
   }
 
-  // if the port is blocked we do not create a listener object
-  if (port->get_status() == PortStatus::kBlocked) return nullptr;
+  // if the port is blocked we want to create the listener but set an error flag
+  // TODO: Set error flag
+  if (port->get_status() == PortStatus::kBlocked)
+    // Set the error flag for later
+    ;
 
   // create the listener object
   std::shared_ptr<Listener> listener =
-      std::make_shared<Listener>(shared_from_this(), port);
+      std::make_shared<Listener>(GetFreeListenerId(), shared_from_this(), port);
 
   // store the listener object in the map
   listeners_.emplace(listener->get_id(), listener);
 
   return listener;
+}
+
+const PortId EventBusImpl::GetFreePortId() {
+  std::lock_guard<std::mutex> lock(mux_pid_counter_);
+  /// TODO: check if this needs a more advanced implementation to handle edge
+  /// cases
+  /// TODO: Reserve certain port ids for special purposes
+  return portid_counter_++;
 }
 
 }  // namespace internal
