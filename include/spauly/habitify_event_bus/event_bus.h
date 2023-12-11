@@ -38,7 +38,7 @@ using PublisherPtr = std::shared_ptr<Publisher<EvTyp>>;
 
 class EventBus : public std::enable_shared_from_this<EventBus> {
  public:
-  using EventBusImplPtr = std::shared_ptr<EventBusImpl>;
+  using EventBusImplPtr = std::shared_ptr<internal::EventBusImpl>;
 
   // EventBus() is private since this should only be created via Create().
   ~EventBus() = default;
