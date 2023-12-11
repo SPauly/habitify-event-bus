@@ -24,14 +24,14 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <habitify_event_bus/actor_ids.h>
-#include <habitify_event_bus/impl/event_base.h>
-#include <habitify_event_bus/impl/event_bus_impl.h>
-#include <habitify_event_bus/listener.h>
-#include <habitify_event_bus/impl/port.h>
-#include <habitify_event_bus/publisher.h>
+#include <spauly/habitify_event_bus/actor_ids.h>
+#include <spauly/habitify_event_bus/impl/event_base.h>
+#include <spauly/habitify_event_bus/impl/event_bus_impl.h>
+#include <spauly/habitify_event_bus/listener.h>
+#include <spauly/habitify_event_bus/impl/port.h>
+#include <spauly/habitify_event_bus/publisher.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 using ListenerPtr = std::shared_ptr<Listener>;
 template <typename EvTyp>
 using PublisherPtr = std::shared_ptr<Publisher<EvTyp>>;
@@ -81,6 +81,6 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
   EventBusImplPtr impl_;
 };
 
-}  // namespace habitify
+}  // namespace habitify_event_bus
 
 #endif  // HABITIFY_EVENT_BUS_HABITIFY_EVENT_BUS_H_

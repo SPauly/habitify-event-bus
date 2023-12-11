@@ -17,7 +17,7 @@
 // Contact via <https://github.com/SPauly/habitify-event-bus>
 #ifndef HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
 #define HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
-#include <habitify_event_bus/impl/publisher_base.h>
+#include <spauly/habitify_event_bus/impl/publisher_base.h>
 
 #include <cassert>
 #include <condition_variable>
@@ -25,11 +25,11 @@
 #include <shared_mutex>
 #include <vector>
 
-#include <habitify_event_bus/actor_ids.h>
-#include <habitify_event_bus/event.h>
-#include <habitify_event_bus/impl/port.h>
+#include <spauly/habitify_event_bus/actor_ids.h>
+#include <spauly/habitify_event_bus/event.h>
+#include <spauly/habitify_event_bus/impl/port.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 class EventBusImpl;
 
 /// Publisher manages objects of type Event<EvTyp> and publishes the data to the

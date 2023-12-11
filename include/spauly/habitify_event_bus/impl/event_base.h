@@ -19,7 +19,7 @@
 #ifndef HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_
 #define HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_
 
-namespace habitify {
+namespace habitify_event_bus {
 
 /// TODO: Remove unnecessary types and make use of smart pointers
 enum EventType { TEST, TEST2 };

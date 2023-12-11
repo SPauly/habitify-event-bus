@@ -24,11 +24,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include <habitify_event_bus/listener.h>
-#include <habitify_event_bus/impl/port.h>
-#include <habitify_event_bus/publisher.h>
+#include <spauly/habitify_event_bus/listener.h>
+#include <spauly/habitify_event_bus/impl/port.h>
+#include <spauly/habitify_event_bus/publisher.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 using ListenerPtr = std::shared_ptr<Listener>;
 template <typename EvTyp>
 using PublisherPtr = std::shared_ptr<Publisher<EvTyp>>;
@@ -129,6 +129,6 @@ PublisherPtr<EvTyp> EventBusImpl::CreatePublisher(const PortId id) {
 }
 
 }  // namespace internal
-}  // namespace habitify
+}  // namespace habitify_event_bus
 
 #endif  // HABITIFY_EVENT_BUS_IMPL_EVENT_BUS_IMPL_H_

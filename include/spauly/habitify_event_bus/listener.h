@@ -22,11 +22,11 @@
 #include <memory>
 #include <shared_mutex>
 
-#include <habitify_event_bus/actor_ids.h>
-#include <habitify_event_bus/event.h>
-#include <habitify_event_bus/impl/port.h>
+#include <spauly/habitify_event_bus/actor_ids.h>
+#include <spauly/habitify_event_bus/event.h>
+#include <spauly/habitify_event_bus/impl/port.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 class EventBusImpl;
 
 /// Listener is used to read events from the Publisher. It is designed to be

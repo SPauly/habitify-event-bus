@@ -24,11 +24,11 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <habitify_event_bus/actor_ids.h>
-#include <habitify_event_bus/impl/event_base.h>
-#include <habitify_event_bus/port_state.h>
+#include <spauly/habitify_event_bus/actor_ids.h>
+#include <spauly/habitify_event_bus/impl/event_base.h>
+#include <spauly/habitify_event_bus/port_state.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 /// TODO: Move PortStatus into Port class and call it Status for convinience
 enum class PortStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
 

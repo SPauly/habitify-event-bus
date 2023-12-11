@@ -28,7 +28,8 @@
 
 int main() {
   int amount_of_events = 0;
-  std::shared_ptr<habitify::EventBus> event_bus = habitify::EventBus::Create();
+  std::shared_ptr<habitify_event_bus::EventBus> event_bus =
+      habitify_event_bus::EventBus::Create();
 
   std::cout << "Enter amount of events to share: " << std::endl;
   std::cin >> amount_of_events;
@@ -37,13 +38,13 @@ int main() {
   std::cout << "Starting Publisher: " << std::endl;
   std::thread publisher_thread([event_bus, amount_of_events]() {
     int event_count = 0;
-    std::shared_ptr<habitify::Publisher<int>> publisher =
+    std::shared_ptr<habitify_event_bus::Publisher<int>> publisher =
         event_bus->CreatePublisher<int>(0);
     while (event_count < amount_of_events) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
       std::cout << "Publishing event: " << event_count++ << std::endl;
-      publisher->Publish(std::make_unique<const habitify::Event<int>>(
-          habitify::EventType::TEST, 0, &event_count));
+      publisher->Publish(std::make_unique<const habitify_event_bus::Event<int>>(
+          habitify_event_bus::EventType::TEST, 0, &event_count));
     }
   });
 
@@ -51,7 +52,7 @@ int main() {
   // events
   std::cout << "Starting Listener: " << std::endl;
   std::thread listener_thread([event_bus, amount_of_events]() {
-    std::shared_ptr<habitify::Listener> listener =
+    std::shared_ptr<habitify_event_bus::Listener> listener =
         event_bus->CreateSubscriber(0);
     int event_count = 0;
 

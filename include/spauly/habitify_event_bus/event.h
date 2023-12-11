@@ -19,7 +19,7 @@
 #ifndef HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
 #define HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
 
-#include <habitify_event_bus/impl/event_base.h>
+#include <spauly/habitify_event_bus/impl/event_base.h>
 
 namespace habitify {
 

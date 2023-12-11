@@ -21,17 +21,17 @@
 #include <string>
 #include <thread>
 
-#include <habitify_event_bus/event.h>
-#include <habitify_event_bus/event_bus.h>
+#include <spauly/habitify_event_bus/event.h>
+#include <spauly/habitify_event_bus/event_bus.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 namespace habitify_testing {
 namespace {
 
 class EventBusTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    event_bus_ = ::habitify::EventBus::Create();
+    event_bus_ = ::habitify_event_bus::EventBus::Create();
     listener_int_ = event_bus_->CreateSubscriber(0);
     listener_str_ = event_bus_->CreateSubscriber(1);
 
@@ -43,19 +43,19 @@ class EventBusTest : public ::testing::Test {
   // utils
   std::shared_ptr<EventBus> event_bus_;
   int test_value_ = 418;
-  ::habitify::Event<int> event_int_{::habitify::EventType::TEST, 0,
+  ::habitify_event_bus::Event<int> event_int_{::habitify::EventType::TEST, 0,
                                     &test_value_};
   std::string test_string_ = "test";
-  ::habitify::Event<std::string> event_str_{::habitify::EventType::TEST, 1,
+  ::habitify_event_bus::Event<std::string> event_str_{::habitify::EventType::TEST, 1,
                                             &test_string_};
 
   // Listeners
-  std::shared_ptr<::habitify::Listener> listener_int_;
-  std::shared_ptr<::habitify::Listener> listener_str_;
+  std::shared_ptr<::habitify_event_bus::Listener> listener_int_;
+  std::shared_ptr<::habitify_event_bus::Listener> listener_str_;
 
   // Publishers
-  std::shared_ptr<::habitify::Publisher<int>> publisher_int_;
-  std::shared_ptr<::habitify::Publisher<std::string>> publisher_str_;
+  std::shared_ptr<::habitify_event_bus::Publisher<int>> publisher_int_;
+  std::shared_ptr<::habitify_event_bus::Publisher<std::string>> publisher_str_;
 };
 
 TEST_F(EventBusTest, Initialization) {

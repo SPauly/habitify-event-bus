@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#include <habitify_event_bus/impl/event_bus_impl.h>
+#include <spauly/habitify_event_bus/impl/event_bus_impl.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 namespace internal {
 EventBusImpl::EventBusImpl() {
   // instantiate default ports here etc...
@@ -76,4 +76,4 @@ const PortId EventBusImpl::GetFreePortId() {
 }
 
 }  // namespace internal
-}  // namespace habitify
+}  // namespace habitify_event_bus

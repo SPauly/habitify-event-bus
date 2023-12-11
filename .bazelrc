@@ -1,2 +1,2 @@
-startup --output_base=../habitify_event_bus/bazel_out
-startup --output_user_root=../habitify_event_bus/bazel_out/_bazel_
+startup --output_base=../spauly/habitify_event_bus/bazel_out
+startup --output_user_root=../spauly/habitify_event_bus/bazel_out/_bazel_

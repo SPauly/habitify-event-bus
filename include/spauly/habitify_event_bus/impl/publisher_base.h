@@ -24,9 +24,9 @@
 #include <shared_mutex>
 #include <vector>
 
-#include <habitify_event_bus/actor_ids.h>
+#include <spauly/habitify_event_bus/actor_ids.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 namespace internal {
 /// PublisherBase is used as a way of storing Publisher in the EventBus. The
 /// actual functionality is implemented by the derived class. It needs to be

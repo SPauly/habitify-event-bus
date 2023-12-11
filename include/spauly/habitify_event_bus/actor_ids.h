@@ -21,7 +21,7 @@
 #include <cstddef>
 /// TODO: Remove this file and move types to a different location
 
-namespace habitify {
+namespace habitify_event_bus {
 using PortId = size_t;
 using PublisherId = size_t;
 using ListenerId = size_t;
