@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#ifndef HABITIFY_EVENT_BUS_IMPL_Channel_H_
-#define HABITIFY_EVENT_BUS_IMPL_Channel_H_
+#ifndef HABITIFY_EVENT_BUS_IMPL_CHANNEL_H_
+#define HABITIFY_EVENT_BUS_IMPL_CHANNEL_H_
 
 #include <condition_variable>
 #include <cstddef>
@@ -24,12 +24,12 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/id_types.h>
 #include <habitify_event_bus/impl/event_base.h>
-#include <habitify_event_bus/Channel_state.h>
 
 namespace habitify_event_bus {
-/// TODO: Move ChannelStatus into Channel class and call it Status for convinience
+/// TODO: Move ChannelStatus into Channel class and call it Status for
+/// convinience
 enum class ChannelStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
 
 namespace internal {
@@ -39,7 +39,6 @@ class Channel {
   Channel(const ChannelId id);
   virtual ~Channel();
 
-  /// TODO: Move most of this functionality into Channel_state.h
   // Getters
   /// Returns the ChannelId of the Channel
   inline const ChannelId get_id() const { return id_; }
@@ -63,16 +62,16 @@ class Channel {
   const ChannelStatus Close();
   /// Blocks the Channel for writing
   const ChannelStatus Block();
-  /// Unblocks the Channel for writing. The PublisherId is used to ensure that only
-  /// the Publisher that blocked the Channel can unblock it.
+  /// Unblocks the Channel for writing. The PublisherId is used to ensure that
+  /// only the Publisher that blocked the Channel can unblock it.
   const ChannelStatus Unblock(const PublisherId id);
 
   // Operants on the Channel
   /// stores the event internally as shared_ptr but needs to obtain ownership
   /// first
   bool Push(std::unique_ptr<const EventBase> event);
-  /// Enables streaming events to the Channel. Calls internal::Channel::Push(event)
-  /// internally.
+  /// Enables streaming events to the Channel. Calls
+  /// internal::Channel::Push(event) internally.
   bool operator<<(std::unique_ptr<const EventBase> event);
 
   // Access the latest Event
@@ -86,8 +85,8 @@ class Channel {
   /// PopLatest() returns the latest Event and removes it from the Channel.
   /// It is advised to store the returned Event for later use.
   std::shared_ptr<const EventBase> PopLatest();
-  /// Calls PopLatest() internally to return the latest event from the Channel and
-  /// remove it from the Channel.
+  /// Calls PopLatest() internally to return the latest event from the Channel
+  /// and remove it from the Channel.
   std::shared_ptr<const EventBase> operator>>(
       std::shared_ptr<const EventBase> event_storage);
 
@@ -110,6 +109,6 @@ class Channel {
 };
 
 }  // namespace internal
-}  // namespace habitify
+}  // namespace habitify_event_bus
 
-#endif  // HABITIFY_EVENT_BUS_IMPL_Channel_H_
+#endif  // HABITIFY_EVENT_BUS_IMPL_CHANNEL_H_

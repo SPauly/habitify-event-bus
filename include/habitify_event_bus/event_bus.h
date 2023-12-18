@@ -24,7 +24,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/impl/id_types.h>
 #include <habitify_event_bus/impl/event_base.h>
 #include <habitify_event_bus/impl/event_bus_impl.h>
 #include <habitify_event_bus/listener.h>
@@ -33,8 +33,10 @@
 
 namespace habitify_event_bus {
 using ListenerPtr = std::shared_ptr<Listener>;
-template <typename EvTyp>
-using PublisherPtr = std::shared_ptr<Publisher<EvTyp>>;
+using PublisherPtr = std::shared_ptr<Publisher>;
+using ListenerId = size_t;
+using PublisherId = size_t;
+using EventId = size_t;
 
 class EventBus : public std::enable_shared_from_this<EventBus> {
  public:
@@ -62,10 +64,7 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
 
   /// Attempts to create a publisher object.This is the only way to obtain a
   /// Publisher object.
-  template <typename EvTyp>
-  PublisherPtr<EvTyp> CreatePublisher() {
-    return impl_->CreatePublisher<EvTyp>();
-  }
+  PublisherPtr CreatePublisher() { return impl_->CreatePublisher(); }
 
  private:
   // This is a singleton class so the constructor needs to be private.

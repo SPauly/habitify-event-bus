@@ -24,7 +24,7 @@
 #include <shared_mutex>
 #include <vector>
 
-#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/impl/id_types.h>
 #include <habitify_event_bus/event.h>
 #include <habitify_event_bus/impl/Channel.h>
 

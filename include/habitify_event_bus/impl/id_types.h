@@ -15,17 +15,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#ifndef HABITIFY_EVENT_BUS_ACTOR_IDS_H_
-#define HABITIFY_EVENT_BUS_ACTOR_IDS_H_
+#ifndef HABITIFY_EVENT_BUS_IMPL_ID_TYPES_H_
+#define HABITIFY_EVENT_BUS_IMPL_ID_TYPES_H_
 
 #include <cstddef>
 /// TODO: Remove this file and move types to a different location
 
 namespace habitify_event_bus {
-using ChannelId = size_t;
+namespace internal {
 using PublisherId = size_t;
 using ListenerId = size_t;
 using EventId = size_t;
-}  // namespace habitify
+}  // namespace internal
+}  // namespace habitify_event_bus
 
-#endif  // HABITIFY_EVENT_BUS_ACTOR_IDS_H_
+#endif  // HABITIFY_EVENT_BUS_IMPL_ID_TYPES_H_

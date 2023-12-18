@@ -24,13 +24,13 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <habitify_event_bus/actor_ids.h>
+#include <habitify_event_bus/impl/id_types.h>
 #include <habitify_event_bus/event.h>
 #include <habitify_event_bus/impl/Channel.h>
 
 namespace habitify_event_bus {
 template <typename T>
-using EventPtr<T> = std::shared_ptr<const Event<T>>;
+using EventPtr = std::shared_ptr<const Event<T>>;
 
 class EventBusImpl;
 

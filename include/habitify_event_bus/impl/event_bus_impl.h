@@ -25,7 +25,7 @@
 #include <vector>
 
 #include <habitify_event_bus/listener.h>
-#include <habitify_event_bus/impl/Channel.h>
+#include <habitify_event_bus/impl/channel.h>
 #include <habitify_event_bus/publisher.h>
 
 namespace habitify_event_bus {
@@ -33,7 +33,6 @@ namespace internal {
 using ListenerPtr = std::shared_ptr<Listener>;
 using PublisherPtr = std::shared_ptr<Publisher>;
 using ChannelPtr = std::shared_ptr<Channel>;
-using PublisherBasePtr = std::shared_ptr<PublisherBase>;
 
 /// The EventBusImpl is the implementation of the EventBus. It is not exposed to
 /// the user. It manages the Listener and Publisher objects by matching them
@@ -79,7 +78,7 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   std::unordered_map<const EventType, ChannelPtr> Channels_;
 
   // Publishers are stored together with their ID for fast lookups.
-  std::unordered_map<const PublisherId, PublisherBasePtr> publishers_;
+  std::unordered_map<const PublisherId, PublisherPtr> publishers_;
 
   // Listeners are stored together with their ID for fast lookups.
   std::unordered_map<const ListenerId, ListenerPtr> listeners_;
