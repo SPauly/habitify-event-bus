@@ -31,91 +31,68 @@ namespace {
 class EventBusTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    event_bus_ = ::habitify_event_bus::EventBus::Create();
-    listener_int_ = event_bus_->CreateSubscriber(0);
-    listener_str_ = event_bus_->CreateSubscriber(1);
+    event_bus_ = EventBus::Create();
 
-    publisher_int_ = event_bus_->CreatePublisher<int>(0);
-    publisher_str_ = event_bus_->CreatePublisher<std::string>(1);
+    listener_ = event_bus_->RegisterListener();
+    publisher_ = event_bus_->RegisterPublisher();
   }
 
  protected:
   // utils
   std::shared_ptr<EventBus> event_bus_;
-  int test_value_ = 418;
-  ::habitify_event_bus::Event<int> event_int_{::habitify::EventType::TEST, 0,
-                                    &test_value_};
-  std::string test_string_ = "test";
-  ::habitify_event_bus::Event<std::string> event_str_{::habitify::EventType::TEST, 1,
-                                            &test_string_};
 
   // Listeners
-  std::shared_ptr<::habitify_event_bus::Listener> listener_int_;
-  std::shared_ptr<::habitify_event_bus::Listener> listener_str_;
+  std::shared_ptr<Listener> listener_;
 
   // Publishers
-  std::shared_ptr<::habitify_event_bus::Publisher<int>> publisher_int_;
-  std::shared_ptr<::habitify_event_bus::Publisher<std::string>> publisher_str_;
+  std::shared_ptr<Publisher<int>> publisher_;
 };
 
 TEST_F(EventBusTest, Initialization) {
   // Check if all pointers are initialized properly
   EXPECT_TRUE(event_bus_ != nullptr);
-  EXPECT_TRUE(listener_int_ != nullptr);
-  EXPECT_TRUE(listener_str_ != nullptr);
-  EXPECT_TRUE(publisher_int_ != nullptr);
-  EXPECT_TRUE(publisher_str_ != nullptr);
-
-  EXPECT_EQ(event_bus_->GetChannelCount(), 2);
+  EXPECT_TRUE(listener_ != nullptr);
+  EXPECT_TRUE(publisher_ != nullptr);
 }
 
 TEST_F(EventBusTest, PublishAndReceive) {
   // Publish an event and check if it is received
-  ASSERT_TRUE(
-      publisher_int_->Publish(std::make_unique<const Event<int>>(event_int_)));
-  EXPECT_TRUE(listener_int_->HasReceivedEvent());
-  auto latest_event_int_ = listener_int_->ReadLatest<int>();
-  EXPECT_EQ(*latest_event_int_->GetData<int>(), test_value_);
-
-  // Check if the counters are increased
-  EXPECT_EQ(publisher_int_->get_writer_index(), 1);
-  EXPECT_EQ(listener_int_->get_read_index(), 1);
-
-  // Test functionality with a string
-  ASSERT_TRUE(publisher_str_->Publish(
-      std::make_unique<const Event<std::string>>(event_str_)));
-  EXPECT_TRUE(listener_str_->HasReceivedEvent());
-  auto latest_event_str_ = listener_str_->ReadLatest<std::string>();
-  EXPECT_EQ(*latest_event_str_->GetData<std::string>(), test_string_);
+  ASSERT_TRUE(publisher_->Publish(EventType::TEST, "Test String"));
+  EXPECT_TRUE(listener_->HasUnreadEvent());
+  auto latest_event_ = listener_->ReadLatest(EventType::TEST);
+  EXPECT_EQ(*latest_event_->GetData<std::string>(), "Test String");
 }
 
 TEST_F(EventBusTest, ThreadSafety) {
+  int received_messages = 0, latest_data;
   // Test threadsafety of the event bus
   std::thread listener_thread([&]() {
-    while (listener_int_->get_read_index() < 100) {
-      if (listener_int_->HasReceivedEvent()) {
-        EXPECT_EQ(*listener_int_->ReadLatest<int>()->GetData<int>(),
-                  test_value_);
-      }
-    }
+    listener_->listen<int>(EventType::TEST,
+                           [&received_messages](Event<int> &e) {
+                             received_messages++;
+                             latest_data = e.GetData<int>();
+                           });
   });
 
   std::thread publisher_thread([&]() {
+    // Publish 100 events
     for (int i = 0; i < 100; i++) {
-      EXPECT_TRUE(publisher_int_->Publish(
-          std::make_unique<const Event<int>>(event_int_)));
+      EXPECT_TRUE(publisher_->Publish(EventType::TEST, i));
     }
   });
 
   publisher_thread.join();
   listener_thread.join();
+
+  EXPECT_EQ(received_messages, 100);
+  EXPECT_EQ(latest_data, 99);
 }
 
 }  // namespace
 
 }  // namespace habitify_testing
 
-}  // namespace habitify
+}  // namespace habitify_event_bus
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
