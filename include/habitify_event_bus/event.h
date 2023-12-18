@@ -21,7 +21,7 @@
 
 #include <habitify_event_bus/impl/event_base.h>
 
-namespace habitify {
+namespace habitify_event_bus {
 
 /// TODO: Add documentation + Move getters and setters from base class here for
 /// a better interface
@@ -40,6 +40,6 @@ class Event : public internal::EventBase {
   T *data_;
 };
 
-}  // namespace habitify
+}  // namespace habitify_event_bus
 
 #endif  // HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
