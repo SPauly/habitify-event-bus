@@ -27,7 +27,7 @@ EventBusImpl::~EventBusImpl() {
   std::unique_lock<std::shared_mutex> lock(mux_publisher_);
 
   // close all open ports and remove them from the map
-  for (std::pair<const PortId, PortPtr>& p : ports_) {
+  for (std::pair<const EventType, PortPtr>& p : ports_) {
     p.second->Close();
   }
   ports_.clear();
@@ -37,29 +37,12 @@ EventBusImpl::~EventBusImpl() {
   listeners_.clear();
 }
 
-std::shared_ptr<Listener> EventBusImpl::CreateListener(const PortId id) {
+std::shared_ptr<Listener> EventBusImpl::CreateListener() {
   std::unique_lock<std::shared_mutex> lock(mux_listener_);
-
-  // This is used to retreive/or create the respective port object
-  std::shared_ptr<Port> port;
-
-  // create the port in case it does not exist
-  if (ports_.find(id) == ports_.end()) {
-    port = std::make_shared<Port>(id);
-    ports_.emplace(id, port);
-  } else {
-    port = ports_.at(id);
-  }
-
-  // if the port is blocked we want to create the listener but set an error flag
-  // TODO: Set error flag
-  if (port->get_status() == PortStatus::kBlocked)
-    // Set the error flag for later
-    ;
 
   // create the listener object
   std::shared_ptr<Listener> listener =
-      std::make_shared<Listener>(GetFreeListenerId(), shared_from_this(), port);
+      std::make_shared<Listener>(GetFreeListenerId(), shared_from_this());
 
   // store the listener object in the map
   listeners_.emplace(listener->get_id(), listener);
@@ -67,12 +50,30 @@ std::shared_ptr<Listener> EventBusImpl::CreateListener(const PortId id) {
   return listener;
 }
 
-const PortId EventBusImpl::GetFreePortId() {
-  std::lock_guard<std::mutex> lock(mux_pid_counter_);
-  /// TODO: check if this needs a more advanced implementation to handle edge
-  /// cases
-  /// TODO: Reserve certain port ids for special purposes
-  return portid_counter_++;
+PublisherPtr EventBusImpl::CreatePublisher() {
+  std::unique_lock<std::shared_mutex> lock(mux_publisher_);
+
+  PortPtr port;
+
+  // Create publisher
+  PublisherPtr publisher = Publisher::Create(GetFreePublisherId());
+
+  // Add publisher to publishers
+  publishers_.emplace(publisher->get_id(), publisher);
+
+  return publisher;
+}
+
+const ListenerId EventBusImpl::GetFreeListenerId() {
+  std::lock<std::mutex> lock(mux_l_counter_);
+
+  return ++listener_count_;
+}
+
+const PublisherId EventBusImpl::GetFreePublisherId() {
+  std::lock<std::mutex> lock(mux_p_counter);
+
+  return ++publisher_counter_;
 }
 
 }  // namespace internal
