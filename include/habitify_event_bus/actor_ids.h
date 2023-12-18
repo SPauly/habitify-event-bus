@@ -22,7 +22,7 @@
 /// TODO: Remove this file and move types to a different location
 
 namespace habitify_event_bus {
-using PortId = size_t;
+using ChannelId = size_t;
 using PublisherId = size_t;
 using ListenerId = size_t;
 using EventId = size_t;

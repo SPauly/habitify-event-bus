@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // Contact via <https://github.com/SPauly/habitify-event-bus>
-#ifndef HABITIFY_EVENT_BUS_IMPL_PORT_H_
-#define HABITIFY_EVENT_BUS_IMPL_PORT_H_
+#ifndef HABITIFY_EVENT_BUS_IMPL_Channel_H_
+#define HABITIFY_EVENT_BUS_IMPL_Channel_H_
 
 #include <condition_variable>
 #include <cstddef>
@@ -26,28 +26,28 @@
 
 #include <habitify_event_bus/actor_ids.h>
 #include <habitify_event_bus/impl/event_base.h>
-#include <habitify_event_bus/port_state.h>
+#include <habitify_event_bus/Channel_state.h>
 
 namespace habitify_event_bus {
-/// TODO: Move PortStatus into Port class and call it Status for convinience
-enum class PortStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
+/// TODO: Move ChannelStatus into Channel class and call it Status for convinience
+enum class ChannelStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
 
 namespace internal {
-class Port {
+class Channel {
  public:
-  Port() = delete;
-  Port(const PortId id);
-  virtual ~Port();
+  Channel() = delete;
+  Channel(const ChannelId id);
+  virtual ~Channel();
 
-  /// TODO: Move most of this functionality into port_state.h
+  /// TODO: Move most of this functionality into Channel_state.h
   // Getters
-  /// Returns the PortId of the Port
-  inline const PortId get_id() const { return id_; }
-  /// Returns the PortStatus
-  inline const PortStatus get_status() const { return status_; }
-  /// Returns the size of the data stored in the Port
+  /// Returns the ChannelId of the Channel
+  inline const ChannelId get_id() const { return id_; }
+  /// Returns the ChannelStatus
+  inline const ChannelStatus get_status() const { return status_; }
+  /// Returns the size of the data stored in the Channel
   inline const size_t get_data_size() const { return data_size_; }
-  /// Returns true if the Port has a publisher
+  /// Returns true if the Channel has a publisher
   inline const bool get_has_publisher() const { return has_publisher_; }
 
   // Setters
@@ -56,22 +56,22 @@ class Port {
   /// Sets publisher_id_ to the specified id
   inline void set_publisher_id(const PublisherId id) { publisher_id_ = id; }
 
-  // Port management
-  /// Opens the Port for writing and reading
-  const PortStatus Open();
-  /// Closes the Port for writing and reading
-  const PortStatus Close();
-  /// Blocks the Port for writing
-  const PortStatus Block();
-  /// Unblocks the Port for writing. The PublisherId is used to ensure that only
-  /// the Publisher that blocked the Port can unblock it.
-  const PortStatus Unblock(const PublisherId id);
+  // Channel management
+  /// Opens the Channel for writing and reading
+  const ChannelStatus Open();
+  /// Closes the Channel for writing and reading
+  const ChannelStatus Close();
+  /// Blocks the Channel for writing
+  const ChannelStatus Block();
+  /// Unblocks the Channel for writing. The PublisherId is used to ensure that only
+  /// the Publisher that blocked the Channel can unblock it.
+  const ChannelStatus Unblock(const PublisherId id);
 
-  // Operants on the Port
+  // Operants on the Channel
   /// stores the event internally as shared_ptr but needs to obtain ownership
   /// first
   bool Push(std::unique_ptr<const EventBase> event);
-  /// Enables streaming events to the Port. Calls internal::Port::Push(event)
+  /// Enables streaming events to the Channel. Calls internal::Channel::Push(event)
   /// internally.
   bool operator<<(std::unique_ptr<const EventBase> event);
 
@@ -80,14 +80,14 @@ class Port {
   /// copying it
 
   /// PullLatest() returns a copy of the latest Event without
-  /// removing it from the port. The copy ensures that thread safety is
+  /// removing it from the Channel. The copy ensures that thread safety is
   /// maintained in case other threads pop the latest Event.
   const EventBase PullLatest() const;
-  /// PopLatest() returns the latest Event and removes it from the port.
+  /// PopLatest() returns the latest Event and removes it from the Channel.
   /// It is advised to store the returned Event for later use.
   std::shared_ptr<const EventBase> PopLatest();
-  /// Calls PopLatest() internally to return the latest event from the port and
-  /// remove it from the port.
+  /// Calls PopLatest() internally to return the latest event from the Channel and
+  /// remove it from the Channel.
   std::shared_ptr<const EventBase> operator>>(
       std::shared_ptr<const EventBase> event_storage);
 
@@ -95,8 +95,8 @@ class Port {
   mutable std::shared_mutex mux_;
   std::shared_ptr<std::condition_variable_any> cv_;
 
-  const PortId id_;
-  PortStatus status_ = PortStatus::kClosed;
+  const ChannelId id_;
+  ChannelStatus status_ = ChannelStatus::kClosed;
 
   size_t data_size_ = 0;
   bool has_publisher_ = false;
@@ -112,4 +112,4 @@ class Port {
 }  // namespace internal
 }  // namespace habitify
 
-#endif  // HABITIFY_EVENT_BUS_IMPL_PORT_H_
+#endif  // HABITIFY_EVENT_BUS_IMPL_Channel_H_

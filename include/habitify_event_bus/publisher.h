@@ -26,7 +26,7 @@
 
 #include <habitify_event_bus/actor_ids.h>
 #include <habitify_event_bus/event.h>
-#include <habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/impl/Channel.h>
 
 namespace habitify_event_bus {
 class EventBusImpl;
@@ -53,7 +53,7 @@ class Publisher {
 
   /// template<typename T>Publisher::Publish(std::unique_ptr<Event<T>> event)
   /// takes ownership of an existing event and publishes it to the corresponding
-  /// Port.
+  /// Channel.
   template <typename T>
   bool Publish(std::unique_ptr<Event<T>> event);
 

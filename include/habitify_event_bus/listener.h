@@ -26,7 +26,7 @@
 
 #include <habitify_event_bus/actor_ids.h>
 #include <habitify_event_bus/event.h>
-#include <habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/impl/Channel.h>
 
 namespace habitify_event_bus {
 template <typename T>
@@ -45,15 +45,15 @@ class Listener : public std::enable_shared_from_this<Listener> {
   Listener(const Listener&) = delete;
   const Listener& operator=(const Listener&) = delete;
 
-  /// TODO: void ChangeSubscription(const PortId& id);
+  /// TODO: void ChangeSubscription(const ChannelId& id);
 
   /// Returns a copy of the latest event. If there are no events it returns
   /// nullptr.
   template <typename T>
   const EventPtr<T> ReadLatest(const EventType event_t) const;
 
-  /// Returns the latest event after removing it from the port. If there are no
-  /// events it returns nullptr.
+  /// Returns the latest event after removing it from the Channel. If there are
+  /// no events it returns nullptr.
   template <typename T>
   EventPtr<T> ReadLatestAndRemove(const EventType event_t);
 
@@ -63,9 +63,9 @@ class Listener : public std::enable_shared_from_this<Listener> {
   const EventPtr<T> Wait(const EventType event_t) const;
 
   // Asynchronously waits for an incoming event and runs the provided callback
-  // with the incoming event. Returns the status of the port.
+  // with the incoming event. Returns the status of the Channel.
   template <typename T>
-  const PortStatus Listen(std::function<void(EventPtr<T>)> callback);
+  const ChannelStatus Listen(std::function<void(EventPtr<T>)> callback);
 
   bool HasUnreadEvent(const EventType event_t) const;
 

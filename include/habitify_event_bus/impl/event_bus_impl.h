@@ -25,19 +25,19 @@
 #include <vector>
 
 #include <habitify_event_bus/listener.h>
-#include <habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/impl/Channel.h>
 #include <habitify_event_bus/publisher.h>
 
 namespace habitify_event_bus {
 namespace internal {
 using ListenerPtr = std::shared_ptr<Listener>;
 using PublisherPtr = std::shared_ptr<Publisher>;
-using PortPtr = std::shared_ptr<Port>;
+using ChannelPtr = std::shared_ptr<Channel>;
 using PublisherBasePtr = std::shared_ptr<PublisherBase>;
 
 /// The EventBusImpl is the implementation of the EventBus. It is not exposed to
 /// the user. It manages the Listener and Publisher objects by matching them
-/// with their respective ports.
+/// with their respective Channels.
 class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
  public:
   EventBusImpl();
@@ -68,15 +68,15 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
  private:
   // Mutexes for thread safety of the different actors
   // (mutable is needed for locking in const functions)
-  mutable std::shared_mutex mux_publisher_, mux_listener_, mux_port_;
+  mutable std::shared_mutex mux_publisher_, mux_listener_, mux_Channel_;
   // Mutex for thread safety of the counters
   mutable std::mutex mux_l_counter_, mux_p_counter;
 
   // Counters for Ids
   size_t publisher_counter_ = 0, listener_counter_ = 0;
 
-  // Ports are stored together with their ID for fast lookups.
-  std::unordered_map<const EventType, PortPtr> ports_;
+  // Channels are stored together with their ID for fast lookups.
+  std::unordered_map<const EventType, ChannelPtr> Channels_;
 
   // Publishers are stored together with their ID for fast lookups.
   std::unordered_map<const PublisherId, PublisherBasePtr> publishers_;

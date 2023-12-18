@@ -28,7 +28,7 @@
 #include <habitify_event_bus/impl/event_base.h>
 #include <habitify_event_bus/impl/event_bus_impl.h>
 #include <habitify_event_bus/listener.h>
-#include <habitify_event_bus/impl/port.h>
+#include <habitify_event_bus/impl/Channel.h>
 #include <habitify_event_bus/publisher.h>
 
 namespace habitify_event_bus {
@@ -73,7 +73,7 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
 
  private:
   // The EventBusImpl is the actual implementation of the EventBus. It is used
-  // internally for managing the ports, publishers and listeners.
+  // internally for managing the Channels, publishers and listeners.
   EventBusImplPtr impl_;
 };
 

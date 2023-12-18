@@ -20,17 +20,17 @@
 namespace habitify_event_bus {
 namespace internal {
 EventBusImpl::EventBusImpl() {
-  // instantiate default ports here etc...
+  // instantiate default Channels here etc...
   // do some basic setup
 }
 EventBusImpl::~EventBusImpl() {
   std::unique_lock<std::shared_mutex> lock(mux_publisher_);
 
-  // close all open ports and remove them from the map
-  for (std::pair<const EventType, PortPtr>& p : ports_) {
+  // close all open Channels and remove them from the map
+  for (std::pair<const EventType, ChannelPtr>& p : Channels_) {
     p.second->Close();
   }
-  ports_.clear();
+  Channels_.clear();
 
   // Remove the all Publisher and Listener instances to call their dtors
   publishers_.clear();
@@ -53,7 +53,7 @@ std::shared_ptr<Listener> EventBusImpl::CreateListener() {
 PublisherPtr EventBusImpl::CreatePublisher() {
   std::unique_lock<std::shared_mutex> lock(mux_publisher_);
 
-  PortPtr port;
+  ChannelPtr Channel;
 
   // Create publisher
   PublisherPtr publisher = Publisher::Create(GetFreePublisherId());
