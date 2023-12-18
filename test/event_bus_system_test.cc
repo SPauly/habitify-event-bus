@@ -33,8 +33,8 @@ class EventBusTest : public ::testing::Test {
   void SetUp() override {
     event_bus_ = EventBus::Create();
 
-    listener_ = event_bus_->RegisterListener();
-    publisher_ = event_bus_->RegisterPublisher();
+    listener_ = event_bus_->CreateListener();
+    publisher_ = event_bus_->CreatePublisher();
   }
 
  protected:

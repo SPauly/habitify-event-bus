@@ -56,19 +56,15 @@ class EventBus : public std::enable_shared_from_this<EventBus> {
     return std::shared_ptr<EventBus>(new EventBus);
   }
 
-  /// Attempts to create a listener object that is subscribed to the specified
-  /// port. Returns nullptr if the port is blocked. This is the only way to
+  /// Attempts to create a listener object. This is the only way to
   /// obtain a Listener object.
-  ListenerPtr EventBus::CreateListener(const PortId& id) {
-    return impl_->CreateListener(id);
-  }
+  ListenerPtr EventBus::CreateListener() { return impl_->CreateListener(); }
 
-  /// Attempts to create a publisher object that is subscribed to the specified
-  /// port. Returns nullptr if the port is blocked or already has a publisher.
-  /// This is the only way to obtain a Publisher object.
+  /// Attempts to create a publisher object.This is the only way to obtain a
+  /// Publisher object.
   template <typename EvTyp>
-  PublisherPtr<EvTyp> CreatePublisher(const PortId& id) {
-    return impl_->CreatePublisher<EvTyp>(id);
+  PublisherPtr<EvTyp> CreatePublisher() {
+    return impl_->CreatePublisher<EvTyp>();
   }
 
  private:
