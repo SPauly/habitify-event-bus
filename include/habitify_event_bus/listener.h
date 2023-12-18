@@ -19,14 +19,19 @@
 #define HABITIFY_EVENT_BUS_INCLUDE_LISTENER_H_
 
 #include <cassert>
+#include <functional>
 #include <memory>
 #include <shared_mutex>
+#include <unordered_map>
 
 #include <habitify_event_bus/actor_ids.h>
 #include <habitify_event_bus/event.h>
 #include <habitify_event_bus/impl/port.h>
 
 namespace habitify_event_bus {
+template <typename T>
+using EventPtr<T> = std::shared_ptr<const Event<T>>;
+
 class EventBusImpl;
 
 /// Listener is used to read events from the Publisher. It is designed to be
@@ -42,40 +47,48 @@ class Listener : public std::enable_shared_from_this<Listener> {
 
   /// TODO: void ChangeSubscription(const PortId& id);
 
-  /// Returns the latest event published by the Publisher. If there are no
-  /// events it returns nullptr.
-  template <typename EvTyp>
-  const std::shared_ptr<const Event<EvTyp>> ReadLatest() {}
+  /// Returns a copy of the latest event. If there are no events it returns
+  /// nullptr.
+  template <typename T>
+  const EventPtr<T> ReadLatest(const EventType event_t) const;
 
-  inline bool HasReceivedEvent();
+  /// Returns the latest event after removing it from the port. If there are no
+  /// events it returns nullptr.
+  template <typename T>
+  EventPtr<T> ReadLatestAndRemove(const EventType event_t);
+
+  /// Blocks the calling call and waits for incoming events of type EvType.
+  /// Returns nullptr if an error occours.
+  template <typename T>
+  const EventPtr<T> Wait(const EventType event_t) const;
+
+  // Asynchronously waits for an incoming event and runs the provided callback
+  // with the incoming event. Returns the status of the port.
+  template <typename T>
+  const PortStatus Listen(std::function<void(EventPtr<T>)> callback);
+
+  bool HasUnreadEvent(const EventType event_t) const;
 
   // Getters
   inline const ListenerId get_id() { return kId_; }
-  inline const PortId get_port_id() { return port_id_; }
-  inline const bool get_is_subscribed() { return is_subscribed_; }
-  inline const size_t get_read_index() { return read_index_; }
 
  private:
   friend class EventBusImpl;
 
   Listener() = delete;
   Listener::Listener(const ListenerId id,
-                     std::shared_ptr<EventBusImpl> event_bus,
-                     std::shared_ptr<internal::Port> port);
+                     std::shared_ptr<EventBusImpl> event_bus);
 
  private:
   mutable std::shared_mutex mux_;
 
   const ListenerId kId_;
-  bool is_subscribed_ = false;
-  size_t read_index_ = 0;
 
-  PortId port_id_ = 0;
-  // This might be a nullptr if the port is blocked or not yet subscribed to
-  std::shared_ptr<internal::Port> port_;
+  // Used to store the latest event for each event type that has been read.
+  std::unordered_map<EventType, EventId> latest_event_ids_;
 
   std::shared_ptr<EventBusImpl> event_bus_;
 };
-}  // namespace habitify
+}  // namespace habitify_event_bus
 
 #endif  // HABITIFY_EVENT_BUS_INCLUDE_LISTENER_H_
