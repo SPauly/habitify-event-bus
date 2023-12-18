@@ -51,11 +51,11 @@ class Publisher {
   template <typename T>
   bool Publish(const EventType event, T data);
 
-  /// template<typename T>Publisher::Publish(std::unique_ptr<Event<T>> event)
-  /// takes ownership of an existing event and publishes it to the corresponding
+  /// template<typename T>Publisher::Publish(EventPtr<T> event)
+  /// copies an existing event and publishes it to the corresponding
   /// Channel.
   template <typename T>
-  bool Publish(std::unique_ptr<Event<T>> event);
+  bool Publish(EventPtr<T> event);
 
  private:
   friend class EventBusImpl;

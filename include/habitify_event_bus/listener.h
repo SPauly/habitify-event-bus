@@ -45,27 +45,26 @@ class Listener : public std::enable_shared_from_this<Listener> {
   Listener(const Listener&) = delete;
   const Listener& operator=(const Listener&) = delete;
 
-  /// TODO: void ChangeSubscription(const ChannelId& id);
-
-  /// Returns a copy of the latest event. If there are no events it returns
-  /// nullptr.
+  /// Returns a ptr to the latest event as const instance. If there are no
+  /// events it returns nullptr. The event is NOT removed from the Channel.
   template <typename T>
-  const EventPtr<T> ReadLatest(const EventType event_t) const;
+  const EventPtr<const T> ReadLatest(const EventType event_t) const;
 
   /// Returns the latest event after removing it from the Channel. If there are
   /// no events it returns nullptr.
   template <typename T>
   EventPtr<T> ReadLatestAndRemove(const EventType event_t);
 
-  /// Blocks the calling call and waits for incoming events of type EvType.
-  /// Returns nullptr if an error occours.
+  /// Blocks the calling call and waits for incoming events of type EventType.
+  /// Returns a shared_ptr to the const object like ReadLatest. Otherwise
+  /// returns nullptr if an error occours.
   template <typename T>
-  const EventPtr<T> Wait(const EventType event_t) const;
+  const EventPtr<const T> Wait(const EventType event_t) const;
 
   // Asynchronously waits for an incoming event and runs the provided callback
   // with the incoming event. Returns the status of the Channel.
   template <typename T>
-  const ChannelStatus Listen(std::function<void(EventPtr<T>)> callback);
+  const ChannelStatus Listen(std::function<void(EventPtr<const T>)> callback);
 
   bool HasUnreadEvent(const EventType event_t) const;
 

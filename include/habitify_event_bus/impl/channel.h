@@ -24,7 +24,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <habitify_event_bus/id_types.h>
+#include <habitify_event_bus/impl/id_types.h>
 #include <habitify_event_bus/impl/event_base.h>
 
 namespace habitify_event_bus {
@@ -36,47 +36,12 @@ namespace internal {
 class Channel {
  public:
   Channel() = delete;
-  Channel(const ChannelId id);
+  Channel(const EventType etype);
   virtual ~Channel();
 
-  // Getters
-  /// Returns the ChannelId of the Channel
-  inline const ChannelId get_id() const { return id_; }
-  /// Returns the ChannelStatus
-  inline const ChannelStatus get_status() const { return status_; }
-  /// Returns the size of the data stored in the Channel
-  inline const size_t get_data_size() const { return data_size_; }
-  /// Returns true if the Channel has a publisher
-  inline const bool get_has_publisher() const { return has_publisher_; }
-
-  // Setters
-  /// Sets has_publisher_ to true
-  inline void set_has_publisher() { has_publisher_ = true; }
-  /// Sets publisher_id_ to the specified id
-  inline void set_publisher_id(const PublisherId id) { publisher_id_ = id; }
-
-  // Channel management
-  /// Opens the Channel for writing and reading
-  const ChannelStatus Open();
-  /// Closes the Channel for writing and reading
-  const ChannelStatus Close();
-  /// Blocks the Channel for writing
-  const ChannelStatus Block();
-  /// Unblocks the Channel for writing. The PublisherId is used to ensure that
-  /// only the Publisher that blocked the Channel can unblock it.
-  const ChannelStatus Unblock(const PublisherId id);
-
-  // Operants on the Channel
-  /// stores the event internally as shared_ptr but needs to obtain ownership
-  /// first
-  bool Push(std::unique_ptr<const EventBase> event);
-  /// Enables streaming events to the Channel. Calls
-  /// internal::Channel::Push(event) internally.
-  bool operator<<(std::unique_ptr<const EventBase> event);
-
-  // Access the latest Event
-  /// TODO: Add functionality to access the latest event without removing or
-  /// copying it
+  // Operations
+  /// Store the given event in the Channel and notify all listeners.
+  bool Push(std::shared_ptr<const EventBase> event);
 
   /// PullLatest() returns a copy of the latest Event without
   /// removing it from the Channel. The copy ensures that thread safety is
@@ -89,6 +54,23 @@ class Channel {
   /// and remove it from the Channel.
   std::shared_ptr<const EventBase> operator>>(
       std::shared_ptr<const EventBase> event_storage);
+
+  // Channel management
+  /// Opens the Channel for writing and reading
+  const ChannelStatus Open();
+  /// Closes the Channel for writing and reading
+  const ChannelStatus Close();
+  /// Blocks the Channel for writing
+  const ChannelStatus Block();
+  /// Unblocks the Channel for writing. The PublisherId is used to ensure that
+  /// only the Publisher that blocked the Channel can unblock it.
+  const ChannelStatus Unblock(const PublisherId id);
+
+  // Getters
+  /// Returns the ChannelStatus
+  inline const ChannelStatus get_status() const { return status_; }
+  /// Returns the size of the data stored in the Channel
+  inline const size_t get_data_size() const { return data_size_; }
 
  private:
   mutable std::shared_mutex mux_;
