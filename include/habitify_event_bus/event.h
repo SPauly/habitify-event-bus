@@ -18,26 +18,57 @@
 
 #ifndef HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
 #define HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
-
 #include <habitify_event_bus/impl/event_base.h>
+
+#include <memory>
+#include <type_traits>
 
 namespace habitify_event_bus {
 
 /// TODO: Add documentation + Move getters and setters from base class here for
 /// a better interface
-template <typename T>
+template <typename DataT>
 class Event : public internal::EventBase {
  public:
-  Event(EventType etype, ChannelIdType channel_id, T *data)
-      : internal::EventBase(etype, channel_id), data_(data) {}
-  ~Event() {}
+  Event(EventType etype) : internal::EventBase(etype) {}
+  Event(EventType etype, const DataT &data)
+      : Event(etype), data_(std::make_shared<const DataT>(std::move(data))) {}
+  virtual ~Event() {}
 
- protected:
-  virtual void *GetMutableDataImpl() override { return data_; }
-  virtual const void *const GetDataImpl() const override { return data_; }
+  /// MutableGetData() returns a mutable copy of the provided data. The
+  /// requested type T must be of the same type as DataT of Event.
+  template <typename T>
+  std::shared_ptr<T> MutableGetData() {
+    // Make sure T matches DataT
+    static_assert(
+        std::is_same_v<DataT, typename std::remove_const<
+                                  typename std::remove_pointer<T>::type>::type>,
+        "Type mismatch in MutableGetData! Requested type T must be of the same "
+        "type as DataT of Event");
+
+    // Create mutable copy of the data
+    std::shared_ptr<T> mutable_copy = std::make_shared<T>(std::copy(*data_));
+
+    return mutable_copy;
+  }
+
+  /// GetData provides immutable access to the underlying shared_ptr<const T>.
+  /// Use MutableGetData() for mutable access to the data.
+  template <typename T>
+  const std::shared_ptr<const T> GetData() const {
+    // Make sure T matches DataT
+    static_assert(
+        std::is_same_v<DataT, typename std::remove_const<
+                                  typename std::remove_pointer<T>::type>::type>,
+        "Type mismatch in GetData! Requested type T must be of the same "
+        "type as DataT of Event");
+
+    // Create mutable copy of the data
+    return data_;
+  }
 
  private:
-  T *data_;
+  std::shared_ptr<const DataT> data_;
 };
 
 }  // namespace habitify_event_bus
