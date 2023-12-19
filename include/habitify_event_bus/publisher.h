@@ -24,12 +24,12 @@
 #include <shared_mutex>
 #include <vector>
 
-#include <habitify_event_bus/impl/id_types.h>
-#include <habitify_event_bus/event.h>
 #include <habitify_event_bus/impl/Channel.h>
+#include <habitify_event_bus/event.h>
+#include <habitify_event_bus/impl/event_bus_impl.h>
+#include <habitify_event_bus/impl/id_types.h>
 
 namespace habitify_event_bus {
-class EventBusImpl;
 
 /// Publisher serves as an interface to publish data to different channels in
 /// the event bus. Internally it preprocess the incoming data for faster
@@ -37,8 +37,6 @@ class EventBusImpl;
 /// TODO: Add Usage:
 class Publisher {
  public:
-  friend class EventBusImpl;
-
   // The construtor is private to ensure that Publisher is only created via the
   // designated Create() function.
   virtual ~Publisher() = default;
@@ -54,34 +52,32 @@ class Publisher {
   /// Copies the provided data and creates an Event of it for further storage
   /// and distribution. T is used to determine the type of the event.
   template <typename T>
-  bool Publish(const T& data);
-
-  /// template<typename T>Publisher::Publish(const EventPtr<T> event)
-  /// copies an existing event and publishes it to the corresponding
-  /// Channel.
-  template <typename T>
-  bool Publish(const EventPtr<T> event);
+  bool Publish(const T& data) const;
 
  private:
   Publisher() = delete;
-  Publisher(const PublisherId id);
+  Publisher(const PublisherId id, internal::EventBusImplPtr event_bus_impl);
 
   /// Publisher()::Create() was made private to ensure that it is only created
   /// via the EventBus::CreatePublisher() function. This way we can enforce
   /// that Publisher is purely used as shared_ptr instance.
-  std::shared_ptr<Publisher> Create(const PublisherId id) {
-    return std::make_shared<Publisher>(id);
+  std::shared_ptr<Publisher> Create(const PublisherId id,
+                                    internal::EventBusImplPtr event_bus_impl) {
+    return std::make_shared<Publisher>(id, event_bus_impl);
   }
 
- protected:
+ private:
   // shared_mutex is used over standard mutex to allow multiple threads
   // to read simultaneously. And only one thread to write.
   mutable std::shared_mutex mux_;
   std::shared_ptr<std::condition_variable_any> cv_;
 
- private:
+  // Metadata
   bool is_registered_ = false;
   const PublisherId kPublisherId_;
+
+  // Helpers
+  const internal::EventBusImplPtr event_bus_;
 };
 
 }  // namespace habitify_event_bus
