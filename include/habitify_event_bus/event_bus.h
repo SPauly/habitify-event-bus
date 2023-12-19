@@ -20,9 +20,9 @@
 #ifndef HABITIFY_EVENT_BUS_HABITIFY_EVENT_BUS_H_
 #define HABITIFY_EVENT_BUS_HABITIFY_EVENT_BUS_H_
 
+#include <cstddef>
 #include <memory>
-#include <shared_mutex>
-#include <unordered_map>
+#include <mutex>
 
 #include <habitify_event_bus/impl/id_types.h>
 #include <habitify_event_bus/impl/event_base.h>
@@ -32,47 +32,51 @@
 #include <habitify_event_bus/publisher.h>
 
 namespace habitify_event_bus {
+using EventBusPtr = std::shared_ptr<EventBus>;
 using ListenerPtr = std::shared_ptr<Listener>;
 using PublisherPtr = std::shared_ptr<Publisher>;
 using ListenerId = size_t;
 using PublisherId = size_t;
 using EventId = size_t;
 
-class EventBus : public std::enable_shared_from_this<EventBus> {
+class EventBus {
  public:
   using EventBusImplPtr = std::shared_ptr<internal::EventBusImpl>;
 
-  // EventBus() is private since this should only be created via Create().
-  ~EventBus() = default;
-
-  // EventBus is noncopyable
-  EventBus(const EventBus&) = delete;
-  EventBus& operator=(const EventBus&) = delete;
-
-  /// Construct and access the EventBus via this function.
-  /// NOTE that EventBus cannot be constructed via a constructor.
-  /// It can be more efficient to store the returned shared_ptr for future use
-  /// than to call this function.
-  static std::shared_ptr<EventBus> Create() {
-    /// TODO: Remove use of new keyword here
-    return std::shared_ptr<EventBus>(new EventBus);
-  }
-
-  /// Attempts to create a listener object. This is the only way to
-  /// obtain a Listener object.
-  ListenerPtr EventBus::CreateListener() { return impl_->CreateListener(); }
-
-  /// Attempts to create a publisher object.This is the only way to obtain a
-  /// Publisher object.
-  PublisherPtr CreatePublisher() { return impl_->CreatePublisher(); }
-
- private:
-  // This is a singleton class so the constructor needs to be private.
   EventBus() : impl_(std::make_shared<internal::EventBusImpl>()) {}
+  virtual ~EventBus() = default;
+
+  /// Attempts to create a listener object.
+  Listener EventBus::CreateListener();
+
+  /// Attempts to create a shared_ptr<Listener> object.
+  ListenerPtr EventBus::CreateSharedListener();
+
+  /// Attempts to create a publisher object,
+  PublisherPtr CreatePublisher();
+
+  /// Attempts to create a shared_ptr<Publisher> object.
+  PublisherPtr CreateSharedPublisher();
+
+ protected:
+  /// Retrieves a free listener id. This is called when a new listener is
+  /// created.
+  const ListenerId GetFreeListenerId();
+  /// Retrieves a free publisher id. This is called when a new publisher is
+  /// created.
+  const PublisherId GetFreePublisherId();
 
  private:
+  // Mutex for thread safety of the counters
+  mutable std::mutex mux_l_counter_, mux_p_counter;
+
+  // Counters for Ids
+  size_t publisher_counter_ = 0, listener_counter_ = 0;
+
   // The EventBusImpl is the actual implementation of the EventBus. It is used
-  // internally for managing the Channels, publishers and listeners.
+  // internally for managing the Channels. It is not exposed to the user. Use
+  // Publisher and Listener objects for reading and writing access to the
+  // EventBus.
   EventBusImplPtr impl_;
 };
 

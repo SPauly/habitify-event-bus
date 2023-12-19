@@ -47,43 +47,14 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   EventBusImpl(const EventBusImpl&) = delete;
   EventBusImpl& operator=(const EventBusImpl&) = delete;
 
-  /// Attempts to create a listener object. The Listener object additionally is
-  /// stored in the eventbus for proper life time management with multiple
-  /// threads.
-  ListenerPtr CreateListener();
-
-  /// Attempts to create a publisher object. The Publisher object additionally
-  /// is stored in the eventbus for proper life time management with multiple
-  /// threads.
-  PublisherPtr CreatePublisher();
-
- private:
-  /// Retrieves a free listener id. This is called when a new listener is
-  /// created.
-  const ListenerId GetFreeListenerId();
-  /// Retrieves a free publisher id. This is called when a new publisher is
-  /// created.
-  const PublisherId GetFreePublisherId();
-
  private:
   // Mutexes for thread safety of the different actors
   // (mutable is needed for locking in const functions)
-  mutable std::shared_mutex mux_publisher_, mux_listener_, mux_Channel_;
-  // Mutex for thread safety of the counters
-  mutable std::mutex mux_l_counter_, mux_p_counter;
-
-  // Counters for Ids
-  size_t publisher_counter_ = 0, listener_counter_ = 0;
+  mutable std::shared_mutex mux_Channel_;
 
   // Channels are stored together with the type_index which corresponds the the
   // type of messages shared on this channel.
   std::unordered_map<const std::type_index, ChannelPtr> Channels_;
-
-  // Publishers are stored together with their ID for fast lookups.
-  std::unordered_map<const PublisherId, PublisherPtr> publishers_;
-
-  // Listeners are stored together with their ID for fast lookups.
-  std::unordered_map<const ListenerId, ListenerPtr> listeners_;
 };
 
 }  // namespace internal
