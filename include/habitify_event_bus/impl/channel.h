@@ -35,6 +35,9 @@ enum class ChannelStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
 namespace internal {
 class Channel {
  public:
+  using EventConstBasePtr = std::shared_ptr<const EventBase>;
+  using EventBasePtr = std::shared_ptr<EventBase>;
+
   Channel() = delete;
   Channel(const EventType etype);
   virtual ~Channel();
@@ -46,14 +49,11 @@ class Channel {
   /// PullLatest() returns a copy of the latest Event without
   /// removing it from the Channel. The copy ensures that thread safety is
   /// maintained in case other threads pop the latest Event.
-  const EventBase PullLatest() const;
+  const EventConstBasePtr PullLatest() const;
+
   /// PopLatest() returns the latest Event and removes it from the Channel.
   /// It is advised to store the returned Event for later use.
-  std::shared_ptr<const EventBase> PopLatest();
-  /// Calls PopLatest() internally to return the latest event from the Channel
-  /// and remove it from the Channel.
-  std::shared_ptr<const EventBase> operator>>(
-      std::shared_ptr<const EventBase> event_storage);
+  EventBasePtr PopLatest();
 
   // Channel management
   /// Opens the Channel for writing and reading
@@ -67,6 +67,9 @@ class Channel {
   const ChannelStatus Unblock(const PublisherId id);
 
   // Getters
+  /// Returns the EventType which is stored in this channel
+  /// EventBase should always be interpreted as this type.
+  inline const EventType get_event_t() const { return event_t_; }
   /// Returns the ChannelStatus
   inline const ChannelStatus get_status() const { return status_; }
   /// Returns the size of the data stored in the Channel
@@ -76,12 +79,10 @@ class Channel {
   mutable std::shared_mutex mux_;
   std::shared_ptr<std::condition_variable_any> cv_;
 
-  const ChannelId id_;
+  const EventType event_t_;
   ChannelStatus status_ = ChannelStatus::kClosed;
 
   size_t data_size_ = 0;
-  bool has_publisher_ = false;
-  PublisherId publisher_id_ = 0;
   unsigned int listener_count_ = 0;
 
   // Events are stored as their baseclass to ensure type flexibility.

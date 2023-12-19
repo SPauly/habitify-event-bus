@@ -45,6 +45,12 @@ class Listener : public std::enable_shared_from_this<Listener> {
   Listener(const Listener&) = delete;
   const Listener& operator=(const Listener&) = delete;
 
+  // Operator overloads
+  // Calls ReadLatest internally and sets the given shared_ptr to the retrieved
+  // one.
+  template <typename T>
+  const EventPtr<const T> operator>>(std::shared_ptr<const Event<T>> event);
+
   /// Returns a ptr to the latest event as const instance. If there are no
   /// events it returns nullptr. The event is NOT removed from the Channel.
   template <typename T>
@@ -69,22 +75,22 @@ class Listener : public std::enable_shared_from_this<Listener> {
   bool HasUnreadEvent(const EventType event_t) const;
 
   // Getters
-  inline const ListenerId get_id() { return kId_; }
+  inline const internal::ListenerId get_id() { return kId_; }
 
  private:
   friend class EventBusImpl;
 
   Listener() = delete;
-  Listener::Listener(const ListenerId id,
+  Listener::Listener(const internal::ListenerId id,
                      std::shared_ptr<EventBusImpl> event_bus);
 
  private:
   mutable std::shared_mutex mux_;
 
-  const ListenerId kId_;
+  const internal::ListenerId kId_;
 
   // Used to store the latest event for each event type that has been read.
-  std::unordered_map<EventType, EventId> latest_event_ids_;
+  std::unordered_map<EventType, internal::EventId> latest_event_ids_;
 
   std::shared_ptr<EventBusImpl> event_bus_;
 };
