@@ -28,56 +28,79 @@ namespace habitify_event_bus {
 namespace habitify_testing {
 namespace {
 
+namespace TestEvents {
+struct OK {};
+struct ERROR {};
+struct TEST {
+  int a;
+  std::string b;
+};
+}  // namespace TestEvents
+
 class EventBusTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    event_bus_ = EventBus::Create();
-
+    // Create event bus, listener and publisher
     listener_ = event_bus_->CreateListener();
     publisher_ = event_bus_->CreatePublisher();
   }
 
  protected:
-  // utils
-  std::shared_ptr<EventBus> event_bus_;
+  // Utils for main Test case:
+  EventBus event_bus_;
+  Listener listener_;
+  Publisher publisher_;
 
-  // Listeners
-  std::shared_ptr<Listener> listener_;
-
-  // Publishers
-  std::shared_ptr<Publisher<int>> publisher_;
+  // Events
+  TestEvents::OK ok_event_;
+  TestEvents::ERROR error_event_;
+  TestEvents::TEST test_event_ = {42, "Test String"};
 };
 
 TEST_F(EventBusTest, Initialization) {
-  // Check if all pointers are initialized properly
-  EXPECT_TRUE(event_bus_ != nullptr);
-  EXPECT_TRUE(listener_ != nullptr);
-  EXPECT_TRUE(publisher_ != nullptr);
+  // Check if all actors are initialized properly when using default create on
+  // stack.
+  EXPECT_TRUE(listener_.is_initialized());
+  EXPECT_TRUE(publisher_.is_initialized());
+
+  // Check if all actors are initialized properly when creating them on the heap
+  SharedEventBus event_bus_shared = std::make_shared<EventBus>();
+  SharedListener listener_shared = event_bus_shared->CreateSharedListener();
+  SharedPublisher publisher_shared = event_bus_shared->CreateSharedPublisher();
+
+  EXPECT_TRUE(listener_shared->is_initialized());
+  EXPECT_TRUE(publisher_shared->is_initialized());
 }
 
 TEST_F(EventBusTest, PublishAndReceive) {
   // Publish an event and check if it is received
-  ASSERT_TRUE(publisher_->Publish(EventType::TEST, "Test String"));
-  EXPECT_TRUE(listener_->HasUnreadEvent());
-  auto latest_event_ = listener_->ReadLatest(EventType::TEST);
-  EXPECT_EQ(*latest_event_->GetData<std::string>(), "Test String");
+  ASSERT_TRUE(publisher_.Publish(test_event_));
+  EXPECT_TRUE(listener_.HasUnreadEvent(EventType::TEST));
+
+  EventPtr<EventType::TEST> latest_event_ =
+      listener_.ReadLatest(EventType::TEST);
+  EXPECT_EQ(latest_event_->GetData(), test_event_);
+
+  // More in depth test of the Publish and Receive functions are performed in
+  // the Publisher and Listener tests. Here it is more important to test the
+  // integration of the different actors in an asynchronous environment.
 }
 
 TEST_F(EventBusTest, ThreadSafety) {
   int received_messages = 0, latest_data;
   // Test threadsafety of the event bus
   std::thread listener_thread([&]() {
-    listener_->listen<int>(EventType::TEST,
-                           [&received_messages](Event<int> &e) {
-                             received_messages++;
-                             latest_data = e.GetData<int>();
-                           });
+    listener_.Listen([&received_messages](const TestEvents::TEST& e) {
+      received_messages++;
+      latest_data = e.GetData().a;
+    });
   });
 
   std::thread publisher_thread([&]() {
     // Publish 100 events
     for (int i = 0; i < 100; i++) {
-      EXPECT_TRUE(publisher_->Publish(EventType::TEST, i));
+      TestEvents::TEST test_event = {i, "Test String"};
+      EXPECT_TRUE(publisher_.Publish(test_event));
     }
   });
 
@@ -94,7 +117,7 @@ TEST_F(EventBusTest, ThreadSafety) {
 
 }  // namespace habitify_event_bus
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
