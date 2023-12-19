@@ -37,6 +37,10 @@ class EventBusImpl;
 /// TODO: Add Usage:
 class Publisher {
  public:
+  friend class EventBusImpl;
+
+  // The construtor is private to ensure that Publisher is only created via the
+  // designated Create() function.
   virtual ~Publisher() = default;
 
   // Publisher is not copyable due to the use of std::shared_mutex
@@ -46,20 +50,19 @@ class Publisher {
   // Getters and Setters:
   const PublisherId get_id() const;
 
-  /// template<typename>Publisher::Publish(const EventType event, T data)
+  /// template<typename>Publisher::Publish(const T& data)
   /// Copies the provided data and creates an Event of it for further storage
+  /// and distribution. T is used to determine the type of the event.
   template <typename T>
-  bool Publish(const EventType event, T data);
+  bool Publish(const T& data);
 
-  /// template<typename T>Publisher::Publish(EventPtr<T> event)
+  /// template<typename T>Publisher::Publish(const EventPtr<T> event)
   /// copies an existing event and publishes it to the corresponding
   /// Channel.
   template <typename T>
-  bool Publish(EventPtr<T> event);
+  bool Publish(const EventPtr<T> event);
 
  private:
-  friend class EventBusImpl;
-
   Publisher() = delete;
   Publisher(const PublisherId id);
 

@@ -56,8 +56,8 @@ class Listener : public std::enable_shared_from_this<Listener> {
   template <typename T>
   const EventPtr<const T> ReadLatest(const EventType event_t) const;
 
-  /// Returns the latest event after removing it from the Channel. If there are
-  /// no events it returns nullptr.
+  /// Returns the latest event after attempting to remove it from the Channel.
+  /// If there are no events or the process fails it returns nullptr.
   template <typename T>
   EventPtr<T> ReadLatestAndRemove(const EventType event_t);
 

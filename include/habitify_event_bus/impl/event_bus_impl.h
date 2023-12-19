@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <memory>
 #include <shared_mutex>
+#include <typeindex>
 #include <unordered_map>
 #include <vector>
 
@@ -74,8 +75,9 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   // Counters for Ids
   size_t publisher_counter_ = 0, listener_counter_ = 0;
 
-  // Channels are stored together with their ID for fast lookups.
-  std::unordered_map<const EventType, ChannelPtr> Channels_;
+  // Channels are stored together with the type_index which corresponds the the
+  // type of messages shared on this channel.
+  std::unordered_map<const std::type_index, ChannelPtr> Channels_;
 
   // Publishers are stored together with their ID for fast lookups.
   std::unordered_map<const PublisherId, PublisherPtr> publishers_;

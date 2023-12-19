@@ -19,50 +19,26 @@
 #ifndef HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_
 #define HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_
 
+#include <cstdint>
+
 namespace habitify_event_bus {
 
-/// TODO: Remove unnecessary types and make use of smart pointers
-enum EventType { TEST, TEST2 };
-
-using ChannelIdType = int;
+using EventType = uint64_t;
 
 namespace internal {
 class EventBase {
  public:
   EventBase() = default;
-  EventBase(EventType etype, ChannelIdType channel_id = 0)
-      : event_type_(etype), channel_id_(channel_id) {}
+  EventBase(EventType etype) : event_type_(etype) {}
   virtual ~EventBase() {}
 
+  // Getters and setters
   inline const EventType &get_event_type() const { return event_type_; }
-  inline const ChannelIdType &get_channel_id() const { return channel_id_; }
-
-  inline void set_event_type(const EventType &etype) { event_type_ = etype; }
-  inline void set_channel_id(const ChannelIdType &id) { channel_id_ = id; }
-
-  // TODO: Add assert to check for missmatch of type. Do this after fixing the
-  // error in PublisherTest
-  template <typename T>
-  T *MutableGetData() {
-    return static_cast<T *>(GetMutableDataImpl());
-  }
-
-  template <typename T>
-  const T *const GetData() const {
-    return static_cast<const T *const>(GetDataImpl());
-  }
-
- protected:
-  virtual void *GetMutableDataImpl() { return nullptr; }
-  virtual const void *const GetDataImpl() const { return nullptr; }
 
  private:
-  EventType event_type_;
-  // TODO: remove channel ID since this is handled by the Publisher and Listener
-  // anyways.
-  ChannelIdType channel_id_ = 0;
+  const EventType event_type_;
 };
 }  // namespace internal
-}  // namespace habitify
+}  // namespace habitify_event_bus
 
 #endif  // HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_

@@ -22,53 +22,56 @@
 
 #include <memory>
 #include <type_traits>
+#include <shared_mutex>
 
 namespace habitify_event_bus {
+namespace internal {
+/// IsSameEventType is a helper template that checks if the provided type T is
+/// the same as the type of the data of the event.
+template <typename Data_t, typename T>
+inline constexpr bool IsSameEventType = std::is_same_v<Data_t, T>;
+}  // namespace internal
 
-/// TODO: Add documentation + Move getters and setters from base class here for
-/// a better interface
+/// Event is a templated class that represents an event that can be published
 template <typename DataT>
 class Event : public internal::EventBase {
  public:
-  Event(EventType etype) : internal::EventBase(etype) {}
-  Event(EventType etype, const DataT &data)
+  Event() = delete;
+  Event(EventType etype, const DataT& data)
       : Event(etype), data_(std::make_shared<const DataT>(std::move(data))) {}
   virtual ~Event() {}
 
   /// MutableGetData() returns a mutable copy of the provided data. The
   /// requested type T must be of the same type as DataT of Event.
   template <typename T>
-  std::shared_ptr<T> MutableGetData() {
+  std::unique_ptr<T> MutableGetData() {
     // Make sure T matches DataT
     static_assert(
-        std::is_same_v<DataT, typename std::remove_const<
-                                  typename std::remove_pointer<T>::type>::type>,
+        internal::IsSameEventType<DataT, T>,
         "Type mismatch in MutableGetData! Requested type T must be of the same "
         "type as DataT of Event");
 
     // Create mutable copy of the data
-    std::shared_ptr<T> mutable_copy = std::make_shared<T>(std::copy(*data_));
+    std::unique_ptr<T> mutable_copy = std::make_unique<T>(std::copy(data_));
 
     return mutable_copy;
   }
 
-  /// GetData provides immutable access to the underlying shared_ptr<const T>.
+  /// GetData provides immutable access to the stored data.
   /// Use MutableGetData() for mutable access to the data.
   template <typename T>
-  const std::shared_ptr<const T> GetData() const {
+  const T& GetData() const {
     // Make sure T matches DataT
     static_assert(
-        std::is_same_v<DataT, typename std::remove_const<
-                                  typename std::remove_pointer<T>::type>::type>,
+        internal::IsSameEventType<DataT, T>,
         "Type mismatch in GetData! Requested type T must be of the same "
         "type as DataT of Event");
 
-    // Create mutable copy of the data
     return data_;
   }
 
  private:
-  std::shared_ptr<const DataT> data_;
+  const DataT data_;
 };
 
 }  // namespace habitify_event_bus

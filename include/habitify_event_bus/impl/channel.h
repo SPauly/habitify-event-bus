@@ -23,6 +23,7 @@
 #include <memory>
 #include <shared_mutex>
 #include <unordered_map>
+#include <typeindex>
 
 #include <habitify_event_bus/impl/id_types.h>
 #include <habitify_event_bus/impl/event_base.h>
@@ -39,7 +40,7 @@ class Channel {
   using EventBasePtr = std::shared_ptr<EventBase>;
 
   Channel() = delete;
-  Channel(const EventType etype);
+  Channel(const std::type_index t_index);
   virtual ~Channel();
 
   // Operations
@@ -69,7 +70,7 @@ class Channel {
   // Getters
   /// Returns the EventType which is stored in this channel
   /// EventBase should always be interpreted as this type.
-  inline const EventType get_event_t() const { return event_t_; }
+  inline const std::type_index get_event_t() const { return event_t_; }
   /// Returns the ChannelStatus
   inline const ChannelStatus get_status() const { return status_; }
   /// Returns the size of the data stored in the Channel
@@ -79,7 +80,7 @@ class Channel {
   mutable std::shared_mutex mux_;
   std::shared_ptr<std::condition_variable_any> cv_;
 
-  const EventType event_t_;
+  const std::type_index event_t_;
   ChannelStatus status_ = ChannelStatus::kClosed;
 
   size_t data_size_ = 0;
