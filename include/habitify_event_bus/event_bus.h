@@ -53,7 +53,7 @@ class EventBus {
   ListenerPtr EventBus::CreateSharedListener();
 
   /// Attempts to create a publisher object,
-  PublisherPtr CreatePublisher();
+  Publisher CreatePublisher();
 
   /// Attempts to create a shared_ptr<Publisher> object.
   PublisherPtr CreateSharedPublisher();

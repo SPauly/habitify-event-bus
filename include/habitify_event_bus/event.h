@@ -33,12 +33,13 @@ inline constexpr bool IsSameEventType = std::is_same_v<Data_t, T>;
 }  // namespace internal
 
 /// Event is a templated class that represents an event that can be published
+/// TODO: implement Event<T> answer function that creates a new Event type with
+/// the metadata set to represent a response.
 template <typename DataT>
 class Event : public internal::EventBase {
  public:
   Event() = delete;
-  Event(EventType etype, const DataT& data)
-      : Event(etype), data_(std::make_shared<const DataT>(std::move(data))) {}
+  Event(EventType etype, const DataT& data) : Event(etype), data_(data) {}
   virtual ~Event() {}
 
   /// MutableGetData() returns a mutable copy of the provided data. The
@@ -54,7 +55,7 @@ class Event : public internal::EventBase {
     // Create mutable copy of the data
     std::unique_ptr<T> mutable_copy = std::make_unique<T>(std::copy(data_));
 
-    return mutable_copy;
+    return std::move(mutable_copy);
   }
 
   /// GetData provides immutable access to the stored data.

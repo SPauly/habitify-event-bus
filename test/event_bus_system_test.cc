@@ -64,9 +64,9 @@ TEST_F(EventBusTest, Initialization) {
   EXPECT_TRUE(publisher_.is_initialized());
 
   // Check if all actors are initialized properly when creating them on the heap
-  SharedEventBus event_bus_shared = std::make_shared<EventBus>();
-  SharedListener listener_shared = event_bus_shared->CreateSharedListener();
-  SharedPublisher publisher_shared = event_bus_shared->CreateSharedPublisher();
+  EventBusPtr event_bus_shared = std::make_shared<EventBus>();
+  ListenerPtr listener_shared = event_bus_shared->CreateSharedListener();
+  PublisherPtr publisher_shared = event_bus_shared->CreateSharedPublisher();
 
   EXPECT_TRUE(listener_shared->is_initialized());
   EXPECT_TRUE(publisher_shared->is_initialized());
@@ -74,11 +74,12 @@ TEST_F(EventBusTest, Initialization) {
 
 TEST_F(EventBusTest, PublishAndReceive) {
   // Publish an event and check if it is received
+  Event<const TestEvents::Test> event;
   ASSERT_TRUE(publisher_.Publish(test_event_));
-  EXPECT_TRUE(listener_.HasUnreadEvent(EventType::TEST));
+  EXPECT_TRUE(listener_.GetEvent(event));
 
-  EventPtr<EventType::TEST> latest_event_ =
-      listener_.ReadLatest(EventType::TEST);
+  EventConstPtr<EventType::TEST> latest_event_ =
+      listener_.ReadLatest<EventType::TEST>();
   EXPECT_EQ(latest_event_->GetData(), test_event_);
 
   // More in depth test of the Publish and Receive functions are performed in
@@ -90,10 +91,11 @@ TEST_F(EventBusTest, ThreadSafety) {
   int received_messages = 0, latest_data;
   // Test threadsafety of the event bus
   std::thread listener_thread([&]() {
-    listener_.Listen([&received_messages](const TestEvents::TEST& e) {
-      received_messages++;
+    while (listener_.Listen([&received_messages](const TestEvents::TEST& e) {
       latest_data = e.GetData().a;
-    });
+    }) == ListenerStatus::kOK) {
+      received_messages++;
+    };
   });
 
   std::thread publisher_thread([&]() {
@@ -102,6 +104,7 @@ TEST_F(EventBusTest, ThreadSafety) {
       TestEvents::TEST test_event = {i, "Test String"};
       EXPECT_TRUE(publisher_.Publish(test_event));
     }
+    publisher_.CloseChannel<TestEvents::TEST>();
   });
 
   publisher_thread.join();

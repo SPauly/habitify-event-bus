@@ -25,15 +25,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include <habitify_event_bus/listener.h>
 #include <habitify_event_bus/impl/channel.h>
-#include <habitify_event_bus/publisher.h>
 
 namespace habitify_event_bus {
 namespace internal {
-using ListenerPtr = std::shared_ptr<Listener>;
-using PublisherPtr = std::shared_ptr<Publisher>;
 using ChannelPtr = std::shared_ptr<Channel>;
+using EventBusImplPtr = std::shared_ptr<EventBusImpl>;
 
 /// The EventBusImpl is the implementation of the EventBus. It is not exposed to
 /// the user. It manages the Listener and Publisher objects by matching them

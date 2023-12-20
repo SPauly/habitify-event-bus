@@ -54,6 +54,11 @@ class Publisher {
   template <typename T>
   bool Publish(const T& data) const;
 
+  /// Publishers can close certain channels to prevent further publishing.
+  /// This is useful to indicate when a certain event has finished.
+  template <typename T>
+  bool CloseChannel() const;
+
  private:
   Publisher() = delete;
   Publisher(const PublisherId id, internal::EventBusImplPtr event_bus_impl);
