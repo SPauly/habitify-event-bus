@@ -37,7 +37,6 @@ namespace internal {
 class Channel {
  public:
   using EventConstBasePtr = std::shared_ptr<const EventBase>;
-  using EventBasePtr = std::shared_ptr<EventBase>;
 
   Channel() = delete;
   Channel(const std::type_index t_index);
@@ -45,16 +44,25 @@ class Channel {
 
   // Operations
   /// Store the given event in the Channel and notify all listeners.
-  bool Push(std::shared_ptr<const EventBase> event);
+  bool Push(const EventConstBasePtr event);
 
-  /// PullLatest() returns a copy of the latest Event without
-  /// removing it from the Channel. The copy ensures that thread safety is
-  /// maintained in case other threads pop the latest Event.
+  /// PullLatest() returns a shared_ptr to the latest Event without
+  /// removing it from the Channel. This ensures that thread safety is
+  /// maintained in case the event is popped during the process.
   const EventConstBasePtr PullLatest() const;
 
-  /// PopLatest() returns the latest Event and removes it from the Channel.
-  /// It is advised to store the returned Event for later use.
-  EventBasePtr PopLatest();
+  /// Removes all events from the Channel for memory efficiency. By default the
+  /// latest event is kept but this can be set to any value >= 0.
+  void FreeEvents(const unsigned int n_keep = 1);
+
+  /// listener_count is estimated using this function together with
+  /// DecreaseListenerCount(). Listener objects should call this function upon
+  /// fetching data from this function initially.
+  void IncreaseListenerCount();
+
+  /// This function should be called in the destructor of each Listener that has
+  /// fetched data from this channel.
+  void DecreaseListenerCount();
 
   // Channel management
   /// Opens the Channel for writing and reading
@@ -89,7 +97,7 @@ class Channel {
   // Events are stored as their baseclass to ensure type flexibility.
   // They are stored together with their respectiv ids to enable a fast lookup
   // by listeners.
-  std::unordered_map<EventId, EventBase> events_;
+  std::unordered_map<EventId, EventConstBasePtr> events_;
 };
 
 }  // namespace internal
