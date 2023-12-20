@@ -21,24 +21,37 @@
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <queue>
 #include <shared_mutex>
+#include <thread>
+#include <typeindex>
 #include <unordered_map>
+#include <vector>
 
-#include <habitify_event_bus/impl/id_types.h>
-#include <habitify_event_bus/event.h>
 #include <habitify_event_bus/impl/Channel.h>
+#include <habitify_event_bus/event.h>
+#include <habitify_event_bus/impl/event_bus_impl.h>
+#include <habitify_event_bus/impl/id_types.h>
 
 namespace habitify_event_bus {
-template <typename T>
-using EventPtr = std::shared_ptr<const Event<T>>;
+// Forward declarations
+class EventBus;
 
-class EventBusImpl;
+template <typename T>
+using EventConstPtr = std::shared_ptr<const Event<T>>;
+template <typename T>
+using ListenerCallbackSig = std::function<void(const T&)>;
 
 /// Listener is used to read events from the Publisher. It is designed to be
 /// thread safe. Usage:
 /// TODO: Add usage example
 class Listener : public std::enable_shared_from_this<Listener> {
  public:
+  // EventBus needs to access the private constructor to create Listener objects
+  friend class EventBus;
+
+  // The constructor is private to ensure that Listener objects can only be
+  // created by the EventBus
   virtual ~Listener() = default;
 
   // Listener is not copyable due to the use of std::shared_mutex
@@ -46,53 +59,83 @@ class Listener : public std::enable_shared_from_this<Listener> {
   const Listener& operator=(const Listener&) = delete;
 
   // Operator overloads
-  // Calls ReadLatest internally and sets the given shared_ptr to the retrieved
-  // one.
+  // Calls GetLatest internally and copies the event into the provided event.
   template <typename T>
-  const EventPtr<const T> operator>>(std::shared_ptr<const Event<T>> event);
+  Event<const T>& operator>>(Event<const T>& event) const;
 
   /// Returns a ptr to the latest event as const instance. If there are no
-  /// events it returns nullptr. The event is NOT removed from the Channel.
+  /// events it returns nullptr.
   template <typename T>
-  const EventPtr<const T> ReadLatest(const EventType event_t) const;
+  const EventConstPtr<T> ReadLatest() const;
 
-  /// Returns the latest event after attempting to remove it from the Channel.
-  /// If there are no events or the process fails it returns nullptr.
+  /// Checks if a new event is available. If so it internally calls ReadLatest
+  /// and returns the result. Otherwise returns nullptr.
   template <typename T>
-  EventPtr<T> ReadLatestAndRemove(const EventType event_t);
+  const EventConstPtr<T> ReadUnreadEvent() const;
+
+  /// Returns a copy of the latest event. If there are no events it returns an
+  /// empty event.
+  template <typename T>
+  Event<const T>& GetLatest() const;
+
+  /// Checks if a new event is available. If so it internally calls GetLatest
+  /// and writes the retrieved event to the provided event and returns true.
+  /// Otherwise returns false.
+  template <typename T>
+  bool GetUnreadEvent(Event<const T>& event) const;
 
   /// Blocks the calling call and waits for incoming events of type EventType.
   /// Returns a shared_ptr to the const object like ReadLatest. Otherwise
   /// returns nullptr if an error occours.
   template <typename T>
-  const EventPtr<const T> Wait(const EventType event_t) const;
+  const EventConstPtr<T> Wait() const;
+
+  /// Blocks the calling call and waits for incoming events of type EventType.
+  /// Internal calls GetLatest and copies the event into the provided event.
+  template <typename T>
+  const EventConstPtr<T> Wait(Event<const T>& event) const;
 
   // Asynchronously waits for an incoming event and runs the provided callback
   // with the incoming event. Returns the status of the Channel.
   template <typename T>
-  const ChannelStatus Listen(std::function<void(EventPtr<const T>)> callback);
-
-  bool HasUnreadEvent(const EventType event_t) const;
+  const ChannelStatus Listen(ListenerCallbackSig callback);
 
   // Getters
   inline const internal::ListenerId get_id() { return kId_; }
 
  private:
-  friend class EventBusImpl;
-
   Listener() = delete;
   Listener::Listener(const internal::ListenerId id,
-                     std::shared_ptr<EventBusImpl> event_bus);
+                     internal::EventBusImplPtr event_bus);
 
  private:
+  // shared_mutex is used over standard mutex to allow multiple threads to read
+  // simultaneously. And only one thread to write.
   mutable std::shared_mutex mux_;
 
+  // Metadata
   const internal::ListenerId kId_;
 
-  // Used to store the latest event for each event type that has been read.
-  std::unordered_map<EventType, internal::EventId> latest_event_ids_;
+  // Helpers
+  internal::EventBusImplPtr event_bus_;
 
-  std::shared_ptr<EventBusImpl> event_bus_;
+  // Stores the id of the latest event for each EventType that has been read so
+  // far to safe the last reading position.
+  std::unordered_map<const std::type_index, const EventId> latest_events_;
+
+  // Store the channels that were used previously to avoid unnecessary lookups
+  // by the event bus.
+  std::unordered_map<const std::type_index, internal::ChannelPtr>
+      used_channels_;
+
+  // Callbacks for listening requests are stored with their respective data type
+  // and are executed in FIFO.
+  std::unordered_map<const std::type_index, std::queue<ListenerCallbackSig>>
+      callbacks_;
+
+  // For each listening request via listen() a thread is spun up per event type
+  // that waits for incoming events and executes the coresponding callbacks.
+  std::vector<std::thread> thread_pool_;
 };
 }  // namespace habitify_event_bus
 
