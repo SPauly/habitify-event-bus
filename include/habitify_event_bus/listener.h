@@ -68,30 +68,31 @@ class Listener : public std::enable_shared_from_this<Listener> {
   template <typename T>
   const EventConstPtr<T> ReadLatest() const;
 
-  /// Checks if a new event is available. If so it internally calls ReadLatest
-  /// and returns the result. Otherwise returns nullptr.
+  /// Checks if an unread event is available and returns it if possible. This
+  /// might return the same as ReadLatest. Returns nullptr if no Event exists or
+  /// if the latest event was already read.
   template <typename T>
-  const EventConstPtr<T> ReadUnreadEvent() const;
+  const EventConstPtr<T> Read() const;
 
   /// Returns a copy of the latest event. If there are no events it returns an
   /// empty event.
   template <typename T>
   Event<const T>& GetLatest() const;
 
-  /// Checks if a new event is available. If so it internally calls GetLatest
-  /// and writes the retrieved event to the provided event and returns true.
-  /// Otherwise returns false.
+  /// Checks if an unread event is available. If so it copies the retrieved
+  /// event to the provided event and returns true. This might be the same as
+  /// GetLatest. Returns false if the latest event was read or no event exists.
   template <typename T>
-  bool GetUnreadEvent(Event<const T>& event) const;
+  bool GetEvent(Event<const T>& event) const;
 
   /// Blocks the calling call and waits for incoming events of type EventType.
-  /// Returns a shared_ptr to the const object like ReadLatest. Otherwise
+  /// Returns a shared_ptr to the const object. Otherwise
   /// returns nullptr if an error occours.
   template <typename T>
   const EventConstPtr<T> Wait() const;
 
   /// Blocks the calling call and waits for incoming events of type EventType.
-  /// Internal calls GetLatest and copies the event into the provided event.
+  /// Internally calls GetEvent and copies the event into the provided event.
   template <typename T>
   const EventConstPtr<T> Wait(Event<const T>& event) const;
 
