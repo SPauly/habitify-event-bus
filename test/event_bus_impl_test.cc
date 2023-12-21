@@ -116,14 +116,14 @@ TEST_F(EventBusImplTest, ChannelRetrieval) {
       std::make_shared<::Event<const TestEvents::TEST>>(test_event_2));
 
   // Retrieve the right channel
-  auto channel_receive = event_bus_impl_->get_channel<const TestEvents::TEST>();
+  auto channel_receive = event_bus_impl_->GetChannel<const TestEvents::TEST>();
   EXPECT_EQ(channel, channel_receive);
 
   // Check that it matches with the second channel
   EXPECT_EQ(channel, channel2);
 
   // Check for a non existing channel
-  auto channel_receive2 = event_bus_impl_->get_channel<const TestEvents::OK>();
+  auto channel_receive2 = event_bus_impl_->GetChannel<const TestEvents::OK>();
   EXPECT_EQ(channel_receive2, nullptr);
 }
 

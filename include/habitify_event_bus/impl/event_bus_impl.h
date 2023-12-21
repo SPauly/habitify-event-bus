@@ -44,6 +44,27 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   EventBusImpl(const EventBusImpl&) = delete;
   EventBusImpl& operator=(const EventBusImpl&) = delete;
 
+  // Getters
+  /// Returns the amount of channels currently registered. This might not
+  /// directly match the amount of different event types in the future for
+  /// optimization but should for now.
+  std::size_t get_channel_count() const;
+  /// Returns the amount of data currently stored in the channels. Counted in
+  /// bytes.
+  std::size_t get_data_size() const;
+
+  // Operants
+  /// Publish serves as an interface to an internally used EventBroker that
+  /// manages the distribution of events. Different EventBrokers may be created
+  /// if their individual queues are too long.
+  template <typename T>
+  const ChannelPtr Publish(EventConstPtr<T> event);
+
+  /// Does the same type deduction as performed by the EventBroker to determine
+  /// the correct channel. Returns nullptr if the channel does not exist.
+  template <typename T>
+  const ChannelPtr GetChannel() const;
+
  private:
   // Mutexes for thread safety of the different actors
   // (mutable is needed for locking in const functions)
