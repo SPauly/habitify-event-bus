@@ -75,6 +75,20 @@ class Event : public internal::EventBase {
   const DataT data_;
 };
 
+/// EventTypes used for Testing
+#if defined(HABITIFY_EVENT_BUS_TESTING)
+namespace habitify_testing {
+namespace TestEvents {
+struct OK {};
+struct ERROR {};
+struct TEST {
+  int a;
+  std::string b;
+};
+}  // namespace TestEvents
+}  // namespace habitify_testing
+#endif  // defined(HABITIFY_EVENT_BUS_TESTING)
+
 }  // namespace habitify_event_bus
 
 #endif  // HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
