@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <typeindex>
 #include <type_traits>
 #include <shared_mutex>
 
@@ -44,7 +45,8 @@ template <typename DataT>
 class Event : public internal::EventBase {
  public:
   Event() = delete;
-  Event(EventType etype, const DataT& data) : Event(etype), data_(data) {}
+  Event(const DataT& data, const std::type_index& etype, const EventId eId = 0)
+      : EventBase(etype, eId), data_(data) {}
   virtual ~Event() {}
 
   /// MutableGetData() returns a mutable copy of the provided data. The
