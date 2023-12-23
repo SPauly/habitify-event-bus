@@ -21,6 +21,7 @@
 #define HABITIFY_EVENT_BUS_HABITIFY_EVENT_BUS_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 
@@ -33,16 +34,9 @@
 
 namespace habitify_event_bus {
 using EventBusPtr = std::shared_ptr<EventBus>;
-using ListenerPtr = std::shared_ptr<Listener>;
-using PublisherPtr = std::shared_ptr<Publisher>;
-using ListenerId = size_t;
-using PublisherId = size_t;
-using EventId = size_t;
 
 class EventBus {
  public:
-  using EventBusImplPtr = std::shared_ptr<internal::EventBusImpl>;
-
   EventBus() : impl_(std::make_shared<internal::EventBusImpl>()) {}
   virtual ~EventBus() = default;
 
@@ -77,7 +71,7 @@ class EventBus {
   // internally for managing the Channels. It is not exposed to the user. Use
   // Publisher and Listener objects for reading and writing access to the
   // EventBus.
-  EventBusImplPtr impl_;
+  std::shared_ptr<internal::EventBusImpl> impl_;
 };
 
 }  // namespace habitify_event_bus

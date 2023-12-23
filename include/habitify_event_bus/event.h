@@ -20,11 +20,16 @@
 #define HABITIFY_EVENT_BUS_SRC_HABITIFY_EVENT_H_
 #include <habitify_event_bus/impl/event_base.h>
 
+#include <cstdint>
 #include <memory>
 #include <type_traits>
 #include <shared_mutex>
 
 namespace habitify_event_bus {
+using EventId = uint64_t;
+template <typename T>
+using EventConstPtr = std::shared_ptr<const Event<T>>;
+
 namespace internal {
 /// IsSameEventType is a helper template that checks if the provided type T is
 /// the same as the type of the data of the event.

@@ -19,6 +19,7 @@
 #define HABITIFY_EVENT_BUS_INCLUDE_LISTENER_H_
 
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <queue>
@@ -37,8 +38,8 @@ namespace habitify_event_bus {
 // Forward declarations
 class EventBus;
 
-template <typename T>
-using EventConstPtr = std::shared_ptr<const Event<T>>;
+using ListenerId = uint64_t;
+using ListenerPtr = std::shared_ptr<Listener>;
 template <typename T>
 using ListenerCallbackSig = std::function<void(const T&)>;
 

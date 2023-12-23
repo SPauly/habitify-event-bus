@@ -29,6 +29,8 @@
 #include <habitify_event_bus/impl/event_base.h>
 
 namespace habitify_event_bus {
+using ChannelPtr = std::shared_ptr<Channel>;
+
 /// TODO: Move ChannelStatus into Channel class and call it Status for
 /// convinience
 enum class ChannelStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
@@ -36,8 +38,6 @@ enum class ChannelStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
 namespace internal {
 class Channel {
  public:
-  using EventConstBasePtr = std::shared_ptr<const EventBase>;
-
   Channel() = delete;
   Channel(const std::type_index t_index);
   virtual ~Channel();

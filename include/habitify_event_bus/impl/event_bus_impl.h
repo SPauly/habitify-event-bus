@@ -29,7 +29,6 @@
 
 namespace habitify_event_bus {
 namespace internal {
-using ChannelPtr = std::shared_ptr<Channel>;
 using EventBusImplPtr = std::shared_ptr<EventBusImpl>;
 
 /// The EventBusImpl is the implementation of the EventBus. It is not exposed to
@@ -58,7 +57,7 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   /// manages the distribution of events. Different EventBrokers may be created
   /// if their individual queues are too long.
   template <typename T>
-  const ChannelPtr Publish(EventConstPtr<T> event);
+  const ChannelPtr Publish(::EventConstPtr<T> event);
 
   /// Does the same type deduction as performed by the EventBroker to determine
   /// the correct channel. Returns nullptr if the channel does not exist.

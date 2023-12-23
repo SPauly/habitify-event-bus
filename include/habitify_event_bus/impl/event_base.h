@@ -20,12 +20,14 @@
 #define HABITIFY_EVENT_BUS_IMPL_HABITIFY_EVENT_BASE_H_
 
 #include <cstdint>
+#include <memory>
 
 namespace habitify_event_bus {
 
-using EventType = uint64_t;
+using EventConstBasePtr = std::shared_ptr<const EventBase>;
 
 namespace internal {
+using EventId = uint64_t;
 class EventBase {
  public:
   EventBase() = default;

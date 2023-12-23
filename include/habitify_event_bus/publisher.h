@@ -19,6 +19,7 @@
 #define HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
 
 #include <cassert>
+#include <cstdint>
 #include <condition_variable>
 #include <memory>
 #include <shared_mutex>
@@ -30,6 +31,8 @@
 #include <habitify_event_bus/impl/id_types.h>
 
 namespace habitify_event_bus {
+using PublisherId = uint64_t;
+using PublisherPtr = std::shared_ptr<Publisher>;
 
 /// Publisher serves as an interface to publish data to different channels in
 /// the event bus. Internally it preprocess the incoming data for faster
