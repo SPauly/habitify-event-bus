@@ -19,7 +19,9 @@
 
 #include <memory>
 #include <string>
+#include <typeinfo>
 
+#include <habitify_event_bus/impl/event_base.h>
 #include <habitify_event_bus/event.h>
 
 namespace habitify_event_bus {
@@ -28,25 +30,43 @@ namespace {
 
 class EventTest : public ::testing::Test {
  protected:
-  void SetUp() override {}
+  void SetUp() override {
+    event_base_ = std::make_shared<const EventBase>(111);
+    event_base_int_ = std::make_shared<const EventBase>(typeid(int), 222);
+  }
 
  protected:
-  std::string test_string_{"test_string"};
-  int test_int = 42;
-
-  enum class CustomEvents : habitify_event_bus::EventType {
-    kString = 0,  // String
-    kInt = 1      // Int
-  };
+  EventConstBasePtr event_base_, event_base_int_;
+  EventConstPtr<int> event_int_;
+  EventConstPtr<char> event_char_;
 };
 
-TEST_F(EventTest, Initialization) {
-  ::habitify_event_bus::Event<std::string> string_event(CustomEvents::kString,
-                                                        test_string_);
-  EXPECT_EQ(string_event.get_event_type(), EventType::kString);
-  EXPECT_EQ(string_event.GetData<std::string>(), test_string_);
+TEST_F(EventTest, BaseInitialization) {
+  ASSERT_NE(event_base_, nullptr);
+  EXPECT_EQ(event_base_->get_id(), 111);
+
+  ASSERT_NE(event_base_int_, nullptr);
+  EXPECT_EQ(event_base_int_->get_id(), 222);
+  EXPECT_EQ(event_base_int_->get_event_type(), typeid(int));
 }
 
+TEST_F(EventTest, BaseSetters) {
+  ASSERT_NE(event_base_, nullptr);
+  ASSERT_NE(event_base_int_, nullptr);
+
+  // Test EventId
+  EXPECT_EQ(event_base_->set_id(1), false);
+  EXPECT_NE(event_base_->get_id(), 1);
+
+  // Test EventType
+  EXPECT_EQ(event_base_int_->get_event_type(), typeid(int));
+  event_base_int_->set_event_type(typeid(char));
+  EXPECT_EQ(event_base_int_->get_event_type(), typeid(char));
+
+  // Test PublisherId
+  EXPECT_EQ(event_base_->set_publisher_id(123), true);
+  EXPECT_EQ(event_base_->get_publisher_id(), 123);
+}
 }  // namespace
 }  // namespace habitify_testing
 

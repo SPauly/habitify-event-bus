@@ -35,13 +35,13 @@ class EventBase {
   EventBase() = default;
   EventBase(const EventId eId) : event_id_(eId) {}
   // EventId might be set later by the EventBroker, so it is not required
-  EventBase(const std::type_info eType, const EventId eId = 0)
+  EventBase(const std::type_info& eType, const EventId eId = 0)
       : EventBase(eId), event_type(eType) {}
   virtual ~EventBase() {}
 
   // Getters
   inline const EventId get_id() const { return event_id_; }
-  inline const std::type_index get_event_type() const { return event_type; }
+  inline const std::type_index get_event_type() const { return event_type_; }
   inline const ::PublisherId get_publisher_id() const { return pub_id_; }
 
   // Setters
@@ -50,6 +50,9 @@ class EventBase {
   bool set_id(const EventId eId) {
     return (event_id != 0) ? false : event_id_ = eId;
   }
+  /// Sets the EventType. Should be used with care and only to set the type
+  /// once!
+  void set_event_type(const std::type_info& eType) { event_type_ = eType; }
   /// PublisherId may only be set once. Returns if the attempt failed.
   bool set_publisher_id(const ::PublisherId pId) {
     return (pub_id_ != 0) ? false : pub_id_ = pId;
@@ -57,7 +60,7 @@ class EventBase {
 
  private:
   EventId event_id_ = 0;
-  std::type_index event_type;
+  std::type_index event_type_;
 
   // Metadata
   ::PublisherId pub_id_ = 0;
