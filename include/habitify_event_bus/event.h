@@ -45,8 +45,7 @@ template <typename DataT>
 class Event : public internal::EventBase {
  public:
   Event() = delete;
-  Event(const DataT& data, const std::type_index& etype, const EventId eId = 0)
-      : EventBase(etype, eId), data_(data) {}
+  Event(const DataT& data) : EventBase(typeid(DataT)), data_(data) {}
   virtual ~Event() {}
 
   /// MutableGetData() returns a mutable copy of the provided data. The

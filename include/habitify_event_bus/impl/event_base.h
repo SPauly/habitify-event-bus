@@ -33,10 +33,7 @@ using EventId = uint64_t;
 class EventBase {
  public:
   EventBase() = default;
-  EventBase(const EventId eId) : event_id_(eId) {}
-  // EventId might be set later by the EventBroker, so it is not required
-  EventBase(const std::type_info& eType, const EventId eId = 0)
-      : EventBase(eId), event_type(eType) {}
+  EventBase(const std::type_info& eType) : event_type(eType) {}
   virtual ~EventBase() {}
 
   // Getters
