@@ -1,19 +1,18 @@
-// habitify-event-bus - Event bus system from
-// <https://github.com/SPauly/Habitify> Copyright (C) 2023  Simon Pauly
+// habitify-event-bus - Lightweight event bus system developed for Habitify
 //
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-//(at your option) any later version.
+// Copyright 2023 Simon Pauly
 //
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
 //
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//       http://www.apache.org/licenses/LICENSE-2.0
 //
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
 // Contact via <https://github.com/SPauly/habitify-event-bus>
 
 // This is a minimal example of how to use the event bus.
@@ -28,7 +27,8 @@
 
 int main() {
   int amount_of_events = 0;
-  std::shared_ptr<habitify::EventBus> event_bus = habitify::EventBus::Create();
+  std::shared_ptr<habitify_event_bus::EventBus> event_bus =
+      habitify_event_bus::EventBus::Create();
 
   std::cout << "Enter amount of events to share: " << std::endl;
   std::cin >> amount_of_events;
@@ -37,13 +37,13 @@ int main() {
   std::cout << "Starting Publisher: " << std::endl;
   std::thread publisher_thread([event_bus, amount_of_events]() {
     int event_count = 0;
-    std::shared_ptr<habitify::Publisher<int>> publisher =
+    std::shared_ptr<habitify_event_bus::Publisher<int>> publisher =
         event_bus->CreatePublisher<int>(0);
     while (event_count < amount_of_events) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
       std::cout << "Publishing event: " << event_count++ << std::endl;
-      publisher->Publish(std::make_unique<const habitify::Event<int>>(
-          habitify::EventType::TEST, 0, &event_count));
+      publisher->Publish(std::make_unique<const habitify_event_bus::Event<int>>(
+          habitify_event_bus::EventType::TEST, 0, &event_count));
     }
   });
 
@@ -51,7 +51,7 @@ int main() {
   // events
   std::cout << "Starting Listener: " << std::endl;
   std::thread listener_thread([event_bus, amount_of_events]() {
-    std::shared_ptr<habitify::Listener> listener =
+    std::shared_ptr<habitify_event_bus::Listener> listener =
         event_bus->CreateSubscriber(0);
     int event_count = 0;
 
