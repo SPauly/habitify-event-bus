@@ -96,7 +96,7 @@ TEST_F(EventBusImplTest, EventBrokerTypeDeduction) {
   auto channel3 = event_bus_impl_->Publish(
       std::make_shared<::Event<const TestEvents::ERROR>>(error_event_));
 
-  ASSERT_TRUE(channel2->get_event_type() != channel3->get_event_type());
+  ASSERT_FALSE(channel2->get_event_type() == channel3->get_event_type());
   EXPECT_EQ(channel2->get_event_type(), typeid(const TestEvents::OK));
   EXPECT_EQ(channel3->get_event_type(), typeid(const TestEvents::ERROR));
 

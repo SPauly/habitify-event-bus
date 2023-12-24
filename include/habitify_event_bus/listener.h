@@ -46,7 +46,7 @@ using ListenerCallbackSig = std::function<void(const T&)>;
 /// Listener is used to read events from the Publisher. It is designed to be
 /// thread safe. Usage:
 /// TODO: Add usage example
-class Listener : public std::enable_shared_from_this<Listener> {
+class Listener {
  public:
   // EventBus needs to access the private constructor to create Listener objects
   friend class EventBus;
