@@ -47,8 +47,8 @@ class EventBusTest : public ::testing::Test {
  protected:
   // Utils for main Test case:
   EventBus event_bus_;
-  Listener listener_;
-  Publisher publisher_;
+  ListenerPtr listener_;
+  PublisherPtr publisher_;
 
   // Events
   TestEvents::OK ok_event_;
@@ -59,26 +59,18 @@ class EventBusTest : public ::testing::Test {
 TEST_F(EventBusTest, Initialization) {
   // Check if all actors are initialized properly when using default create on
   // stack.
-  EXPECT_TRUE(listener_.is_initialized());
-  EXPECT_TRUE(publisher_.is_initialized());
-
-  // Check if all actors are initialized properly when creating them on the heap
-  EventBusPtr event_bus_shared = std::make_shared<EventBus>();
-  ListenerPtr listener_shared = event_bus_shared->CreateSharedListener();
-  PublisherPtr publisher_shared = event_bus_shared->CreateSharedPublisher();
-
-  EXPECT_TRUE(listener_shared->is_initialized());
-  EXPECT_TRUE(publisher_shared->is_initialized());
+  EXPECT_TRUE(listener_->is_initialized());
+  EXPECT_TRUE(publisher_->is_initialized());
 }
 
 TEST_F(EventBusTest, PublishAndReceive) {
   // Publish an event and check if it is received
   Event<const TestEvents::Test> event;
-  ASSERT_TRUE(publisher_.Publish(test_event_));
-  EXPECT_TRUE(listener_.GetEvent(event));
+  ASSERT_TRUE(publisher_->Publish(test_event_));
+  EXPECT_TRUE(listener_->GetEvent(event));
 
   EventConstPtr<EventType::TEST> latest_event_ =
-      listener_.ReadLatest<EventType::TEST>();
+      listener_->ReadLatest<EventType::TEST>();
   EXPECT_EQ(latest_event_->GetData(), test_event_);
 
   // More in depth test of the Publish and Receive functions are performed in
@@ -90,7 +82,7 @@ TEST_F(EventBusTest, ThreadSafety) {
   int received_messages = 0, latest_data;
   // Test threadsafety of the event bus
   std::thread listener_thread([&]() {
-    while (listener_.Listen([&received_messages](const TestEvents::TEST& e) {
+    while (listener_->Listen([&received_messages](const TestEvents::TEST& e) {
       latest_data = e.GetData().a;
     }) == ListenerStatus::kOK) {
       received_messages++;
@@ -101,9 +93,9 @@ TEST_F(EventBusTest, ThreadSafety) {
     // Publish 100 events
     for (int i = 0; i < 100; i++) {
       TestEvents::TEST test_event = {i, "Test String"};
-      EXPECT_TRUE(publisher_.Publish(test_event));
+      EXPECT_TRUE(publisher_->Publish(test_event));
     }
-    publisher_.CloseChannel<TestEvents::TEST>();
+    publisher_->CloseChannel<TestEvents::TEST>();
   });
 
   publisher_thread.join();
