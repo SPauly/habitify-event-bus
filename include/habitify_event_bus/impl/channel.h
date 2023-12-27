@@ -38,7 +38,7 @@ namespace internal {
 class Channel {
  public:
   Channel() = delete;
-  Channel(const std::type_index t_index);
+  Channel(const std::type_index t_index, const size_t data_size);
   virtual ~Channel();
 
   // Operations
@@ -77,11 +77,13 @@ class Channel {
   // Getters
   /// Returns the EventType which is stored in this channel
   /// EventBase should always be interpreted as this type.
-  inline const std::type_index get_event_t() const { return event_t_; }
+  inline const std::type_index get_event_type() const { return event_t_; }
   /// Returns the ChannelStatus
   inline const ChannelStatus get_status() const { return status_; }
-  /// Returns the size of the data stored in the Channel
+  /// Returns the size of the data of one element stored in the Channel
   inline const size_t get_data_size() const { return data_size_; }
+  /// Returns the amount of events stored in the Channel
+  inline const size_t get_event_count() const;
 
  private:
   mutable std::shared_mutex mux_;
@@ -91,6 +93,7 @@ class Channel {
   ChannelStatus status_ = ChannelStatus::kClosed;
 
   size_t data_size_ = 0;
+  size_t event_count_ = 0;
   unsigned int listener_count_ = 0;
 
   // Events are stored as their baseclass to ensure type flexibility.
