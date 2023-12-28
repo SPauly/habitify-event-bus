@@ -38,6 +38,10 @@ const BusLoad& EventBusImpl::get_load() {
   std::shared_lock<std::shared_mutex> lock(mux_channels_);
   load_.channel_count = channels_.size();
 
+  // Reset the event count and data size to 0
+  load_.event_count = 0;
+  load_.data_size = 0;
+
   for (const auto& channel : channels_) {
     load_.event_count += channel.second->get_event_count();
     load_.data_size += channel.second->get_data_size();
@@ -46,7 +50,7 @@ const BusLoad& EventBusImpl::get_load() {
   return load_;
 }
 
-const size_t EventBusImpl::get_channels() const {
+const size_t EventBusImpl::get_channel_count() const {
   std::shared_lock<std::shared_mutex> lock(mux_channels_);
   return channels_.size();
 }

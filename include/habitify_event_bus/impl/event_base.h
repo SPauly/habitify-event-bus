@@ -37,7 +37,7 @@ class EventBase {
   // Getters
   inline const EventId get_id() const { return event_id_; }
   inline const std::type_index get_event_type() const { return event_type_; }
-  inline const ::PublisherId get_publisher_id() const { return pub_id_; }
+  inline const PublisherId get_publisher_id() const { return pub_id_; }
 
   // Setters
   /// Sets the EventId to the given value only if the id hasn't been set yet to
@@ -49,7 +49,7 @@ class EventBase {
   /// once!
   void set_event_type(const std::type_info& eType) { event_type_ = eType; }
   /// PublisherId may only be set once. Returns if the attempt failed.
-  bool set_publisher_id(const ::PublisherId pId) {
+  bool set_publisher_id(const PublisherId pId) {
     return (pub_id_ != 0) ? false : pub_id_ = pId;
   }
 
@@ -58,7 +58,7 @@ class EventBase {
   std::type_index event_type_;
 
   // Metadata
-  ::PublisherId pub_id_ = 0;
+  PublisherId pub_id_ = 0;
 };
 }  // namespace internal
 }  // namespace habitify_event_bus

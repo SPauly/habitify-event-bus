@@ -91,7 +91,7 @@ struct TEST {
 };
 }  // namespace TestEvents
 }  // namespace habitify_testing
-#endif  // defined(HABITIFY_EVENT_BUS_TESTING)
+#endif  // HABITIFY_EVENT_BUS_TESTING
 
 }  // namespace habitify_event_bus
 

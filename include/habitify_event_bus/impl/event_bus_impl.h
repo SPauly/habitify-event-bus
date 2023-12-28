@@ -59,7 +59,7 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   const BusLoad& get_load();
 
   /// Returns the number of registered Channels
-  const size_t get_channels() const;
+  const size_t get_channel_count() const;
 
   // Operants
   /// Publish uses typedetuction to determine the correct Channel and creates it
@@ -74,6 +74,12 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   /// certain Channel is blocked or nonexistent.
   template <typename T>
   const ChannelPtr GetChannel();
+
+  /// RemoveChannel removes the Channel that is deduced from the given type T
+  /// from the event bus. The events stored in the Channel are lost to listeners
+  /// that have not obtained access to them yet. Handle with care!
+  template <typename T>
+  void RemoveChannel();
 
   /// Removes all events from the Channels for memory efficiency. By default the
   /// latest event is kept but this can be set to any value >= 0.
@@ -139,6 +145,20 @@ const ChannelPtr EventBusImpl::GetChannel() {
     return new_channel;
   }
 }
+
+template <typename T>
+void EventBusImpl::RemoveChannel() {
+  std::type_index channel_t = DeduceEventType<T>;
+
+  std::unique_lock<std::shared_mutex> lock(mux_channels_);
+
+  // Only Remove the channel if it already exists
+  auto it = channels_.find(channel_t);
+
+  if (it != channels_.end()) {
+    channels_.at(channel_t)->Close();
+    channels_.erase(it);
+  }
 
 }  // namespace internal
 }  // namespace habitify_event_bus
