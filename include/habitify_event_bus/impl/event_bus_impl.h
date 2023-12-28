@@ -15,6 +15,7 @@
 //   limitations under the License.
 // Contact via <https://github.com/SPauly/habitify-event-bus>#ifndef
 // HABITIFY_EVENT_BUS_IMPL_EVENT_BUS_IMPL_H_
+#ifndef HABITIFY_EVENT_BUS_IMPL_EVENT_BUS_IMPL_H_
 #define HABITIFY_EVENT_BUS_IMPL_EVENT_BUS_IMPL_H_
 
 #include <cstddef>
@@ -22,7 +23,6 @@
 #include <shared_mutex>
 #include <typeindex>
 #include <unordered_map>
-#include <vector>
 
 #include <habitify_event_bus/impl/channel.h>
 
@@ -54,20 +54,26 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   EventBusImpl& operator=(const EventBusImpl&) = delete;
 
   // Getters
-  /// Returns the current data load of the event bus. Is calculated when called.
+  /// Returns the current data load of the event bus. Tge load is calculated
+  /// when called.
   const BusLoad& get_load();
 
+  /// Returns the number of registered Channels
+  const size_t get_channels() const;
+
   // Operants
-  /// Publish serves as an interface to an internally used EventBroker that
-  /// manages the distribution of events. Different EventBrokers may be created
-  /// if their individual queues are too long.
+  /// Publish uses typedetuction to determine the correct Channel and creates it
+  /// if needed. The event is then published to the channel and the
+  /// corresponding Channel is returned. Returns nullptr if the event fails to
+  /// be published.
   template <typename T>
   const ChannelPtr Publish(::EventConstPtr<T> event);
 
-  /// Does the same type deduction as performed by the EventBroker to determine
-  /// the correct channel. Returns nullptr if the channel does not exist.
+  /// GetChannel returns the Channel that is deduced from the given type T and
+  /// creates it if it does not yet exist. It does not return nullptr. Even if a
+  /// certain Channel is blocked or nonexistent.
   template <typename T>
-  const ChannelPtr GetChannel() const;
+  const ChannelPtr GetChannel();
 
   /// Removes all events from the Channels for memory efficiency. By default the
   /// latest event is kept but this can be set to any value >= 0.
@@ -81,7 +87,7 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
  private:
   // Mutexes for thread safety of the different actors
   // (mutable is needed for locking in const functions)
-  mutable std::shared_mutex mux_channel_;
+  mutable std::shared_mutex mux_channels_;
 
   // Channels are stored together with the type_index which corresponds the the
   // type of messages shared on this channel.
@@ -90,6 +96,49 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   // Metadata
   BusLoad load_;
 };
+
+// Type deduction
+template <typename T>
+inline constexpr std::type_index DeduceEventType = typeid(T);
+
+// Template definitions
+
+template <typename T>
+const ChannelPtr EventBusImpl::Publish(::EventConstPtr<T> event) {
+  // Prepare the event for publishing
+  event->set_event_type(DeduceEventType<T>);
+
+  const ChannelPtr channel = GetChannel<T>();
+
+  if (channel->Push(event) == true)
+    return channel;
+  else
+    return nullptr;
+}
+
+template <typename T>
+const ChannelPtr EventBusImpl::GetChannel() {
+  std::type_index channel_t = DeduceEventType<T>;
+
+  std::shared_lock<std::shared_mutex> slock(mux_channels_);
+
+  // Check if the Channel already exists
+  auto it = channels_.find(channel_t);
+
+  if (it != channels_.end()) {
+    return channels_.at(channel_t);
+  } else {
+    // Aquire the exclusive lock over channels_ since we have to add the
+    // Channel. Open the shared_lock first
+    slock.unlock();
+    std::unique_lock<std::shared_mutex> ulock(mux_channels_);
+
+    ChannelPtr new_channel = std::make_shared<Channel>(channel_t, sizeof(T));
+    channels_.emplace(
+        std::pair<std::type_index, ChannelPtr>(channel_t, new_channel));
+    return new_channel;
+  }
+}
 
 }  // namespace internal
 }  // namespace habitify_event_bus

@@ -21,7 +21,7 @@ namespace habitify_event_bus {
 namespace internal {
 EventBusImpl::EventBusImpl() {}
 EventBusImpl::~EventBusImpl() {
-  std::unique_lock<std::shared_mutex> lock(mux_channel_);
+  std::unique_lock<std::shared_mutex> lock(mux_channels_);
   // Close all the channels before removing them to inform all eventual
   // listeners that the bus is shutting down
   for (auto& channel : channels_) {
@@ -35,7 +35,7 @@ const BusLoad& EventBusImpl::get_load() {
   // since a lot of threads may write to the channel at once and each trying to
   // aquiring the lock for load_ would be time intensive the load is calculated
   // when requested.
-  std::shared_lock<std::shared_mutex> lock(mux_channel_);
+  std::shared_lock<std::shared_mutex> lock(mux_channels_);
   load_.channel_count = channels_.size();
 
   for (const auto& channel : channels_) {
@@ -46,15 +46,20 @@ const BusLoad& EventBusImpl::get_load() {
   return load_;
 }
 
+const size_t EventBusImpl::get_channels() const {
+  std::shared_lock<std::shared_mutex> lock(mux_channels_);
+  return channels_.size();
+}
+
 void EventBusImpl::FreeEvents(const unsigned int n_keep) {
-  std::shared_lock<std::shared_mutex> lock(mux_channel_);
+  std::shared_lock<std::shared_mutex> lock(mux_channels_);
   for (auto& channel : channels_) {
     channel.second->FreeEvents(n_keep);
   }
 }
 
 void EventBusImpl::DynamicFreeSpace(const unsigned int n_max_bytes) {
-  std::shared_lock<std::shared_mutex> lock(mux_channel_);
+  std::shared_lock<std::shared_mutex> lock(mux_channels_);
   // Determine the maximum amount of bytes per channel
   const unsigned int n_max_bytes_per_channel = n_max_bytes / channels_.size();
 
