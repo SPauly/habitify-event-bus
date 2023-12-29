@@ -75,5 +75,9 @@ void EventBusImpl::DynamicFreeSpace(const unsigned int n_max_bytes) {
   }
 }
 
+const unsigned long long EventBusImpl::GetUId() {
+  return std::static_cast<unsigned long long>(distrib_(gen_));
+}
+
 }  // namespace internal
 }  // namespace habitify_event_bus

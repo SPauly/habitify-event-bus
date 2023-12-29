@@ -31,7 +31,7 @@ using EventId = uint64_t;
 class EventBase {
  public:
   EventBase() = default;
-  EventBase(const std::type_info& eType) : event_type(eType) {}
+  EventBase(const std::type_info& eType) : event_type_(eType) {}
   virtual ~EventBase() {}
 
   // Getters
@@ -43,7 +43,7 @@ class EventBase {
   /// Sets the EventId to the given value only if the id hasn't been set yet to
   /// avoid changing ids.
   bool set_id(const EventId eId) {
-    return (event_id != 0) ? false : event_id_ = eId;
+    return (event_id_ != 0) ? false : event_id_ = eId;
   }
   /// Sets the EventType. Should be used with care and only to set the type
   /// once!

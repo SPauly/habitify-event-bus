@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <random>
 #include <shared_mutex>
 #include <typeindex>
 #include <unordered_map>
@@ -67,7 +68,7 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   /// corresponding Channel is returned. Returns nullptr if the event fails to
   /// be published.
   template <typename T>
-  const ChannelPtr Publish(::EventConstPtr<T> event);
+  const ChannelPtr Publish(EventConstPtr<T> event);
 
   /// GetChannel returns the Channel that is deduced from the given type T and
   /// creates it if it does not yet exist. It does not return nullptr. Even if a
@@ -90,6 +91,11 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
   /// matched.
   void DynamicFreeSpace(const unsigned int n_max_bytes = 1);
 
+ protected:
+  /// Returns a unique id which is created by choosing a random number in the
+  /// range of uint64_t.
+  const unsigned long long GetUId();
+
  private:
   // Mutexes for thread safety of the different actors
   // (mutable is needed for locking in const functions)
@@ -101,18 +107,24 @@ class EventBusImpl : public std::enable_shared_from_this<EventBusImpl> {
 
   // Metadata
   BusLoad load_;
+
+  // Random generator
+  std::random_device rd_;
+  std::mt19937_64 gen_(rd_());
+  std::uniform_int_distribution<unsigned long long> distrib_(0, -1);
 };
 
 // Type deduction
 template <typename T>
-inline constexpr std::type_index DeduceEventType = typeid(T);
+inline const std::type_index DeduceEventType = typeid(T);
 
 // Template definitions
 
 template <typename T>
-const ChannelPtr EventBusImpl::Publish(::EventConstPtr<T> event) {
+const ChannelPtr EventBusImpl::Publish(EventConstPtr<T> event) {
   // Prepare the event for publishing
   event->set_event_type(DeduceEventType<T>);
+  event->set_id(GetUId());
 
   const ChannelPtr channel = GetChannel<T>();
 
@@ -159,7 +171,7 @@ void EventBusImpl::RemoveChannel() {
     channels_.at(channel_t)->Close();
     channels_.erase(it);
   }
-
+}
 }  // namespace internal
 }  // namespace habitify_event_bus
 
