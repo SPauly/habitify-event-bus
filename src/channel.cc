@@ -27,8 +27,7 @@ Channel::~Channel() {}
 
 bool Channel::Push(EventConstBasePtr event) {
   // Check if the event is of the correct type
-  if (event->get_event_type() != event_type_ ||
-      status_ != ChannelStatus::kOpen) {
+  if (event->get_event_type() != event_type_ || status_ != Status::kOpen) {
     return false;
   }
 
@@ -58,7 +57,7 @@ const EventConstBasePtr Channel::PullLatest() const {
   std::shared_lock<std::shared_mutex> lock(mux_events_);
 
   // Check if the queue is empty
-  if (event_queue_.empty() || status_ == ChannelStatus::kClosed) {
+  if (event_queue_.empty() || status_ == Status::kClosed) {
     return nullptr;
   }
 
@@ -73,7 +72,7 @@ const EventConstBasePtr Channel::PullNext(const unsigned int pos) const {
   // exclude the latest event which can be obtained using PullLatest()
   if (event_queue_.empty() ||
       pos >= (event_queue_.size() + event_offset_) - 1 ||
-      status_ == ChannelStatus::kClosed) {
+      status_ == Status::kClosed) {
     return nullptr;
   }
 
@@ -128,16 +127,16 @@ void Channel::DecreaseListenerCount() {
   listener_count_--;
 }
 
-const ChannelStatus Channel::Open() {
+const Channel::Status Channel::Open() {
   // Lock the mutex
   std::unique_lock<std::shared_mutex> lock(mux_status_);
 
-  if (status_ == ChannelStatus::kBlocked) return status_;
+  if (status_ == Status::kBlocked) return status_;
 
-  return status_ = ChannelStatus::kOpen;
+  return status_ = Status::kOpen;
 }
 
-const ChannelStatus Channel::Close() {
+const Channel::Status Channel::Close() {
   // Lock the mutex
   std::unique_lock<std::shared_mutex> lock(mux_status_);
 
@@ -147,21 +146,21 @@ const ChannelStatus Channel::Close() {
   // Unsubscribe all listeners
   listener_count_ = 0;
 
-  return status_ = ChannelStatus::kClosed;
+  return status_ = Status::kClosed;
 }
 
-const ChannelStatus Channel::Block() {
+const Channel::Status Channel::Block() {
   // Lock the mutex
   std::unique_lock<std::shared_mutex> lock(mux_status_);
 
-  return status_ = ChannelStatus::kBlocked;
+  return status_ = Status::kBlocked;
 }
 
-const ChannelStatus Channel::Unblock() {
+const Channel::Status Channel::Unblock() {
   // Lock the mutex
   std::unique_lock<std::shared_mutex> lock(mux_status_);
 
-  return status_ = ChannelStatus::kOpen;
+  return status_ = Status::kOpen;
 }
 
 }  // namespace internal

@@ -100,7 +100,7 @@ class Listener {
   // Asynchronously waits for an incoming event and runs the provided callback
   // with the incoming event. Returns the status of the Channel.
   template <typename T>
-  const ChannelStatus Listen(ListenerCallbackSig callback);
+  const Status Listen(ListenerCallbackSig callback);
 
   // Getters
   inline const internal::ListenerId get_id() { return kId_; }

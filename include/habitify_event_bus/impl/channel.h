@@ -28,19 +28,17 @@
 #include <habitify_event_bus/impl/event_base.h>
 
 namespace habitify_event_bus {
-// Forward declarations
 namespace internal {
+// Forward declarations
 class Channel;
-}  // namespace internal
 
 using ChannelPtr = std::shared_ptr<internal::Channel>;
 
-/// TODO: Move ChannelStatus into Channel class and call it Status for
-/// convinience
-enum class ChannelStatus { kOpen, kClosed, kBlocked, kWaitingForClosure };
-
-namespace internal {
 class Channel {
+ public:
+  // Forward declarations
+  enum class Status;
+
  public:
   Channel() = delete;
   Channel(const std::type_index t_index, const size_t type_size);
@@ -75,20 +73,20 @@ class Channel {
 
   // Channel management
   /// Attempts to opens the Channel for writing and reading. May return
-  /// ChannelStatus::kBlocked. This can only be undone by a call to Unblock().
-  const ChannelStatus Open();
+  /// Status::kBlocked. This can only be undone by a call to Unblock().
+  const Status Open();
 
   /// Closes the Channel for writing and reading and deletes all the stored
   /// events.
-  const ChannelStatus Close();
+  const Status Close();
 
   /// Blocks the Channel for writing. Reading is still possible. This may be
   /// undone by any Publisher instance. It does not gurantee that the Channel
   /// will be blocked till a call to unblock.
-  const ChannelStatus Block();
+  const Status Block();
 
   /// Unblocks the Channel for writing. This may be called by any Publisher.
-  const ChannelStatus Unblock();
+  const Status Unblock();
 
   // Getters
   /// Returns the EventType which is stored in this channel
@@ -96,7 +94,7 @@ class Channel {
   inline const std::type_index get_event_type() const { return event_type_; }
 
   /// Returns the ChannelStatus
-  inline const ChannelStatus get_status() const {
+  inline const Status get_status() const {
     std::shared_lock<std::shared_mutex> lock(mux_status_);
     return status_;
   }
@@ -113,6 +111,21 @@ class Channel {
     return event_count_;
   };
 
+  /// Returns an approximation of the active Listeners
+  inline const unsigned int get_listener_count() const {
+    std::shared_lock<std::shared_mutex> lock(mux_listener_count_);
+    return listener_count_;
+  }
+
+  /// Returns a shared_ptr to the used condition_variable_any which is notified
+  /// whenever new data is pushed to the channel.
+  inline std::shared_ptr<std::condition_variable_any> get_cv() const {
+    return cv_;
+  }
+
+ public:
+  enum class Status { kOpen, kClosed, kBlocked, kWaitingForClosure };
+
  private:
   // synchronization
   mutable std::shared_mutex mux_events_, mux_status_, mux_listener_count_,
@@ -127,7 +140,7 @@ class Channel {
   // Channel properties
   const std::type_index event_type_;
   const size_t type_size_ = 0;
-  ChannelStatus status_ = ChannelStatus::kClosed;
+  Status status_ = Status::kClosed;
 
   // State data
   size_t data_size_ = 0;
