@@ -38,6 +38,7 @@ class EventBase {
   inline const EventId get_id() const { return event_id_; }
   inline const std::type_index get_event_type() const { return event_type_; }
   inline const PublisherId get_publisher_id() const { return pub_id_; }
+  inline const unsigned int get_queue_pos() const { return queue_pos_; }
 
   // Setters
   /// Sets the EventId to the given value only if the id hasn't been set yet to
@@ -52,10 +53,14 @@ class EventBase {
   bool set_publisher_id(const PublisherId pId) {
     return (pub_id_ != 0) ? false : pub_id_ = pId;
   }
+  /// Sets the position of the queue in which the event is stored. should only
+  /// be used by the Channel.
+  void set_queue_pos(const unsigned int pos) { queue_pos_ = pos; }
 
  private:
   EventId event_id_ = 0;
   std::type_index event_type_;
+  unsigned int queue_pos_ = 0;
 
   // Metadata
   PublisherId pub_id_ = 0;
