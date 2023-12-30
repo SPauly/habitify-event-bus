@@ -13,7 +13,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-// Contact via <https://github.com/SPauly/habitify-event-bus>#ifndef HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
+// Contact via <https://github.com/SPauly/habitify-event-bus>#ifndef
+// HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
 #define HABITIFY_EVENT_BUS_INCLUDE_PUBLISHER_H_
 
 #include <cassert>
@@ -26,14 +27,13 @@
 #include <habitify_event_bus/impl/Channel.h>
 #include <habitify_event_bus/event.h>
 #include <habitify_event_bus/impl/event_bus_impl.h>
-#include <habitify_event_bus/impl/id_types.h>
 
 namespace habitify_event_bus {
 // Forward declarations
 class EventBus;
 
 using PublisherId = uint64_t;
-using PublisherPtr = std::shared_ptr<Publisher>;
+using PublisherPtr = std::unique_ptr<Publisher>;
 
 /// Publisher serves as an interface to publish data to different channels in
 /// the event bus. Internally it preprocess the incoming data for faster
@@ -72,14 +72,6 @@ class Publisher {
   Publisher() = delete;
   Publisher(const PublisherId id, internal::EventBusImplPtr event_bus_impl);
 
-  /// Publisher()::Create() was made private to ensure that it is only created
-  /// via the EventBus::CreatePublisher() function. This way we can enforce
-  /// that Publisher is purely created by the EventBus.
-  std::shared_ptr<Publisher> Create(const PublisherId id,
-                                    internal::EventBusImplPtr event_bus_impl) {
-    return std::make_shared<Publisher>(id, event_bus_impl);
-  }
-
  private:
   // shared_mutex is used over standard mutex to allow multiple threads
   // to read simultaneously. And only one thread to write.
@@ -91,7 +83,7 @@ class Publisher {
   const PublisherId kPublisherId_;
 
   // Helpers
-  const internal::EventBusImplPtr event_bus_;
+  const internal::EventBusImplPtr ebus_impl_;
 };
 
 }  // namespace habitify_event_bus

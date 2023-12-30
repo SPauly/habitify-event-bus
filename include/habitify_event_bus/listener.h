@@ -33,14 +33,13 @@
 #include <habitify_event_bus/impl/Channel.h>
 #include <habitify_event_bus/event.h>
 #include <habitify_event_bus/impl/event_bus_impl.h>
-#include <habitify_event_bus/impl/id_types.h>
 
 namespace habitify_event_bus {
 // Forward declarations
 class EventBus;
 
 using ListenerId = uint64_t;
-using ListenerPtr = std::shared_ptr<Listener>;
+using ListenerPtr = std::unique_ptr<Listener>;
 template <typename T>
 using ListenerCallbackSig = std::function<void(const T&)>;
 
@@ -101,7 +100,7 @@ class Listener {
   // Asynchronously waits for an incoming event and runs the provided callback
   // with the incoming event. Returns the status of the Channel.
   template <typename T>
-  const ChannelStatus Listen(ListenerCallbackSig callback);
+  const Status Listen(ListenerCallbackSig callback);
 
   // Getters
   inline const internal::ListenerId get_id() { return kId_; }
@@ -120,7 +119,7 @@ class Listener {
   const internal::ListenerId kId_;
 
   // Helpers
-  internal::EventBusImplPtr event_bus_;
+  internal::EventBusImplPtr ebus_impl_;
 
   // Stores the id of the latest event for each EventType that has been read so
   // far to safe the last reading position.

@@ -23,7 +23,6 @@
 #include <memory>
 #include <mutex>
 
-#include <habitify_event_bus/impl/id_types.h>
 #include <habitify_event_bus/impl/event_base.h>
 #include <habitify_event_bus/impl/event_bus_impl.h>
 #include <habitify_event_bus/listener.h>
@@ -38,17 +37,11 @@ class EventBus {
   EventBus() : impl_(std::make_shared<internal::EventBusImpl>()) {}
   virtual ~EventBus() = default;
 
-  /// Attempts to create a listener object.
-  Listener EventBus::CreateListener();
+  /// Attempts to create a unique_ptr<Listener> object.
+  ListenerPtr EventBus::CreateListener();
 
-  /// Attempts to create a shared_ptr<Listener> object.
-  ListenerPtr EventBus::CreateSharedListener();
-
-  /// Attempts to create a publisher object,
-  Publisher CreatePublisher();
-
-  /// Attempts to create a shared_ptr<Publisher> object.
-  PublisherPtr CreateSharedPublisher();
+  /// Attempts to create a unique_ptr<Publisher> object.
+  PublisherPtr CreatePublisher();
 
  protected:
   /// Retrieves a free listener id. This is called when a new listener is
@@ -69,7 +62,7 @@ class EventBus {
   // internally for managing the Channels. It is not exposed to the user. Use
   // Publisher and Listener objects for reading and writing access to the
   // EventBus.
-  std::shared_ptr<internal::EventBusImpl> impl_;
+  EventBusImplPtr impl_;
 };
 
 }  // namespace habitify_event_bus

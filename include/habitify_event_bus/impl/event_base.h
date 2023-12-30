@@ -31,34 +31,39 @@ using EventId = uint64_t;
 class EventBase {
  public:
   EventBase() = default;
-  EventBase(const std::type_info& eType) : event_type(eType) {}
+  EventBase(const std::type_info& eType) : event_type_(eType) {}
   virtual ~EventBase() {}
 
   // Getters
   inline const EventId get_id() const { return event_id_; }
   inline const std::type_index get_event_type() const { return event_type_; }
-  inline const ::PublisherId get_publisher_id() const { return pub_id_; }
+  inline const PublisherId get_publisher_id() const { return pub_id_; }
+  inline const unsigned int get_queue_pos() const { return queue_pos_; }
 
   // Setters
   /// Sets the EventId to the given value only if the id hasn't been set yet to
   /// avoid changing ids.
   bool set_id(const EventId eId) {
-    return (event_id != 0) ? false : event_id_ = eId;
+    return (event_id_ != 0) ? false : event_id_ = eId;
   }
   /// Sets the EventType. Should be used with care and only to set the type
   /// once!
   void set_event_type(const std::type_info& eType) { event_type_ = eType; }
   /// PublisherId may only be set once. Returns if the attempt failed.
-  bool set_publisher_id(const ::PublisherId pId) {
+  bool set_publisher_id(const PublisherId pId) {
     return (pub_id_ != 0) ? false : pub_id_ = pId;
   }
+  /// Sets the position of the queue in which the event is stored. should only
+  /// be used by the Channel.
+  void set_queue_pos(const unsigned int pos) { queue_pos_ = pos; }
 
  private:
   EventId event_id_ = 0;
   std::type_index event_type_;
+  unsigned int queue_pos_ = 0;
 
   // Metadata
-  ::PublisherId pub_id_ = 0;
+  PublisherId pub_id_ = 0;
 };
 }  // namespace internal
 }  // namespace habitify_event_bus

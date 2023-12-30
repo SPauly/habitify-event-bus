@@ -19,61 +19,64 @@
 
 namespace habitify_event_bus {
 namespace internal {
-EventBusImpl::EventBusImpl() {
-  // instantiate default Channels here etc...
-  // do some basic setup
-}
+EventBusImpl::EventBusImpl() {}
 EventBusImpl::~EventBusImpl() {
-  std::unique_lock<std::shared_mutex> lock(mux_publisher_);
-
-  // close all open Channels and remove them from the map
-  for (std::pair<const EventType, ChannelPtr>& p : Channels_) {
-    p.second->Close();
+  std::unique_lock<std::shared_mutex> lock(mux_channels_);
+  // Close all the channels before removing them to inform all eventual
+  // listeners that the bus is shutting down
+  for (auto& channel : channels_) {
+    channel.second->Close();
   }
-  Channels_.clear();
 
-  // Remove the all Publisher and Listener instances to call their dtors
-  publishers_.clear();
-  listeners_.clear();
+  channels_.clear();
 }
 
-std::shared_ptr<Listener> EventBusImpl::CreateListener() {
-  std::unique_lock<std::shared_mutex> lock(mux_listener_);
+const BusLoad& EventBusImpl::get_load() {
+  // since a lot of threads may write to the channel at once and each trying to
+  // aquiring the lock for load_ would be time intensive the load is calculated
+  // when requested.
+  std::shared_lock<std::shared_mutex> lock(mux_channels_);
+  load_.channel_count = channels_.size();
 
-  // create the listener object
-  std::shared_ptr<Listener> listener =
-      std::make_shared<Listener>(GetFreeListenerId(), shared_from_this());
+  // Reset the event count and data size to 0
+  load_.event_count = 0;
+  load_.data_size = 0;
 
-  // store the listener object in the map
-  listeners_.emplace(listener->get_id(), listener);
+  for (const auto& channel : channels_) {
+    load_.event_count += channel.second->get_event_count();
+    load_.data_size += channel.second->get_data_size();
+  }
 
-  return listener;
+  return load_;
 }
 
-PublisherPtr EventBusImpl::CreatePublisher() {
-  std::unique_lock<std::shared_mutex> lock(mux_publisher_);
-
-  ChannelPtr Channel;
-
-  // Create publisher
-  PublisherPtr publisher = Publisher::Create(GetFreePublisherId());
-
-  // Add publisher to publishers
-  publishers_.emplace(publisher->get_id(), publisher);
-
-  return publisher;
+const size_t EventBusImpl::get_channel_count() const {
+  std::shared_lock<std::shared_mutex> lock(mux_channels_);
+  return channels_.size();
 }
 
-const ListenerId EventBusImpl::GetFreeListenerId() {
-  std::lock<std::mutex> lock(mux_l_counter_);
-
-  return ++listener_count_;
+void EventBusImpl::FreeEvents(const unsigned int n_keep) {
+  std::shared_lock<std::shared_mutex> lock(mux_channels_);
+  for (auto& channel : channels_) {
+    channel.second->FreeEvents(n_keep);
+  }
 }
 
-const PublisherId EventBusImpl::GetFreePublisherId() {
-  std::lock<std::mutex> lock(mux_p_counter);
+void EventBusImpl::DynamicFreeSpace(const unsigned int n_max_bytes) {
+  std::shared_lock<std::shared_mutex> lock(mux_channels_);
+  // Determine the maximum amount of bytes per channel
+  const unsigned int n_max_bytes_per_channel = n_max_bytes / channels_.size();
 
-  return ++publisher_counter_;
+  for (auto& channel : channels_) {
+    // Calculate how many events can be kept per event type
+    unsigned int keep =
+        n_max_bytes_per_channel / channel.second->get_data_size();
+    channel.second->FreeEvents(keep);
+  }
+}
+
+const unsigned long long EventBusImpl::GetUId() {
+  return std::static_cast<unsigned long long>(distrib_(gen_));
 }
 
 }  // namespace internal

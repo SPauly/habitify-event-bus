@@ -18,7 +18,7 @@
 
 #ifndef HABITIFY_EVENT_BUS_TESTING
 #define HABITIFY_EVENT_BUS_TESTING
-#endif
+#endif  // HABITIFY_EVENT_BUS_TESTING
 
 #include <memory>
 #include <string>
@@ -37,10 +37,10 @@ class EventBusImplTest : public ::testing::Test {
   EventBusImplPtr event_bus_impl_;
 
   // Events
-  ::TestEvents::OK ok_event_;
-  ::TestEvents::ERROR error_event_;
-  ::TestEvents::TEST test_event_ = {42, "Test String"};
-  ::TestEvents::TEST test_event_2 = {23, "Test String 2"};
+  TestEvents::OK ok_event_;
+  TestEvents::ERROR error_event_;
+  TestEvents::TEST test_event_ = {42, "Test String"};
+  TestEvents::TEST test_event_2 = {23, "Test String 2"};
 };
 
 TEST_F(EventBusImplTest, Initialization) {
@@ -49,7 +49,10 @@ TEST_F(EventBusImplTest, Initialization) {
   // Check the empty state of a newly created EventBusImpl
   // This might change over time, but for now we expect the following:
   EXPECT_EQ(event_bus_impl_->get_channel_count(), 0);
-  EXPECT_EQ(event_bus_impl_->get_data_size(), 0);
+
+  internal::BusLoad load = event_bus_impl_->get_load();
+  EXPECT_EQ(load.event_count, 0);
+  EXPECT_EQ(load.data_size, 0);
 
   // Test that all the initial setup is done correctly
   // There is non for now
@@ -58,22 +61,24 @@ TEST_F(EventBusImplTest, Initialization) {
 TEST_F(EventBusImplTest, ChannelCreation) {
   // Create a new channel
   auto channel = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::TEST>>(test_event_));
+      std::make_shared<const Event<TestEvents::TEST>>(test_event_));
   ASSERT_TRUE(channel != nullptr);
 
   // Check that the channel is correctly added to the EventBusImpl
   EXPECT_EQ(event_bus_impl_->get_channel_count(), 1);
-  EXPECT_NE(event_bus_impl_->get_data_size(), 0);
+  internal::BusLoad load = event_bus_impl_->get_load();
+  EXPECT_EQ(load.event_count, 1);
+  EXPECT_EQ(load.data_size, sizeof(test_event_));
 
   auto channel2 = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::OK>>(ok_event_));
+      std::make_shared<const Event<TestEvents::OK>>(ok_event_));
   ASSERT_TRUE(channel2 != nullptr);
 
   // The channel count should be 2 now
   EXPECT_EQ(event_bus_impl_->get_channel_count(), 2);
 
   auto channel3 = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::ERROR>>(error_event_));
+      std::make_shared<const Event<TestEvents::ERROR>>(error_event_));
   ASSERT_TRUE(channel3 != nullptr);
 
   // The channel count should be 3 now and all channels should be different
@@ -85,51 +90,53 @@ TEST_F(EventBusImplTest, ChannelCreation) {
 TEST_F(EventBusImplTest, EventBrokerTypeDeduction) {
   // Test if the event type is correctly deduced
   auto channel = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::TEST>>(test_event_));
+      std::make_shared<const Event<TestEvents::TEST>>(test_event_));
   ASSERT_TRUE(channel != nullptr);
-  EXPECT_EQ(channel->get_event_type(), typeid(const TestEvents::TEST));
+  EXPECT_EQ(channel->get_event_type(), typeid(TestEvents::TEST));
 
   // Test deduction for two similar events
   auto channel2 = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::OK>>(ok_event_));
+      std::make_shared<const Event<TestEvents::OK>>(ok_event_));
   auto channel3 = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::ERROR>>(error_event_));
+      std::make_shared<const Event<TestEvents::ERROR>>(error_event_));
 
   ASSERT_FALSE(channel2->get_event_type() == channel3->get_event_type());
-  EXPECT_EQ(channel2->get_event_type(), typeid(const TestEvents::OK));
-  EXPECT_EQ(channel3->get_event_type(), typeid(const TestEvents::ERROR));
+  EXPECT_EQ(channel2->get_event_type(), typeid(TestEvents::OK));
+  EXPECT_EQ(channel3->get_event_type(), typeid(TestEvents::ERROR));
 
   // Test deduction for two equal events
   channel4 = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::TEST>>(test_event_2));
+      std::make_shared<const Event<TestEvents::TEST>>(test_event_2));
 
-  EXPECT_TRUE(channel->get_event_type() == channel4->get_event_type());
+  EXPECT_EQ(channel->get_event_type(), channel4->get_event_type());
+  EXPECT_EQ(channel, channel4);
 }
 
 TEST_F(EventBusImplTest, ChannelRetrieval) {
   // Publish an event
   auto channel = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::TEST>>(test_event_));
+      std::make_shared<const Event<TestEvents::TEST>>(test_event_));
   ASSERT_TRUE(channel != nullptr);
   auto channel2 = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::TEST>>(test_event_2));
+      std::make_shared<const Event<TestEvents::TEST>>(test_event_2));
+  ASSERT_TRUE(channel2 != nullptr);
 
   // Retrieve the right channel
-  auto channel_receive = event_bus_impl_->GetChannel<const TestEvents::TEST>();
+  auto channel_receive = event_bus_impl_->GetChannel<TestEvents::TEST>();
   EXPECT_EQ(channel, channel_receive);
 
   // Check that it matches with the second channel
   EXPECT_EQ(channel, channel2);
 
   // Check for a non existing channel
-  auto channel_receive2 = event_bus_impl_->GetChannel<const TestEvents::OK>();
-  EXPECT_EQ(channel_receive2, nullptr);
+  auto channel_receive2 = event_bus_impl_->GetChannel<TestEvents::OK>();
+  EXPECT_NE(channel_receive2, nullptr);
 }
 
 TEST_F(EventBusImplTest, ChannelRemoval) {
   // Publish an event
   auto channel = event_bus_impl_->Publish(
-      std::make_shared<::Event<const TestEvents::TEST>>(test_event_));
+      std::make_shared<const Event<TestEvents::TEST>>(test_event_));
   ASSERT_TRUE(channel != nullptr);
 
   // Check that the channel is correctly added to the EventBusImpl
@@ -137,11 +144,13 @@ TEST_F(EventBusImplTest, ChannelRemoval) {
   EXPECT_NE(event_bus_impl_->get_data_size(), 0);
 
   // Remove the channel
-  event_bus_impl_->RemoveChannel<const TestEvents::TEST>();
+  event_bus_impl_->RemoveChannel<TestEvents::TEST>();
 
   // Check that the channel is correctly removed from the EventBusImpl
   EXPECT_EQ(event_bus_impl_->get_channel_count(), 0);
-  EXPECT_EQ(event_bus_impl_->get_data_size(), 0);
+  BusLoad load = event_bus_impl_->get_load();
+  EXPECT_EQ(load.event_count, 0);
+  EXPECT_EQ(load.data_size, 0);
 }
 }  // namespace
 }  // namespace habitify_testing
